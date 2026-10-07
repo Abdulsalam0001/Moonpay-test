@@ -12,6 +12,19 @@ function require_auth():array{
         exit;
     }
 
+    // Refresh the user's status from the database so suspension takes effect immediately.
+    if(empty($u['demo']) && !empty($u['id'])){
+        $statusStmt=Database::connection()->prepare('SELECT status FROM users WHERE id=:id LIMIT 1');
+        $statusStmt->execute(['id'=>$u['id']]);
+        $currentStatus=$statusStmt->fetchColumn();
+        if($currentStatus!=='active'){
+            $_SESSION['user']['status']='suspended';
+        } else {
+            $_SESSION['user']['status']='active';
+        }
+        $u=$_SESSION['user'];
+    }
+
     $last=(int)($_SESSION['last_activity']??time());
     if(time()-$last>1800){
         logout();
