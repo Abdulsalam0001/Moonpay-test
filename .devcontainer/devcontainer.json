@@ -1,0 +1,25 @@
+{
+  "name": "MoonPay PHP 8.3",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "features": {
+    "ghcr.io/devcontainers/features/php:1": {
+      "version": "8.3",
+      "extensions": "pdo_pgsql,pgsql"
+    }
+  },
+  "forwardPorts": [8080],
+  "portsAttributes": {
+    "8080": {
+      "label": "MoonPay",
+      "onAutoForward": "openPreview"
+    }
+  },
+  "postCreateCommand": "php -v && php -m | grep -E 'pdo_pgsql|pgsql'",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "bmewburn.vscode-intelephense-client"
+      ]
+    }
+  }
+}
