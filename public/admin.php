@@ -8,7 +8,32 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
     $action=$_POST['action']??'';
     $userId=(int)($_POST['user_id']??0);
 
-    if($userId === (int)$admin['id']){
+    if($action==='create_user'){
+        $name=trim((string)($_POST['name']??''));
+        $email=strtolower(trim((string)($_POST['email']??'')));
+        $password=(string)($_POST['password']??'');
+        $role=in_array($_POST['role']??'user',['user','admin'],true)?$_POST['role']:'user';
+
+        if($name==='' || strlen($name)>100 || !filter_var($email,FILTER_VALIDATE_EMAIL)){
+            $error='Enter a valid name and email address.';
+        } elseif(strlen($password)<12){
+            $error='Password must be at least 12 characters.';
+        } else {
+            try{
+                $stmt=$pdo->prepare('INSERT INTO users(name,email,password_hash,role,status) VALUES(:name,:email,:hash,:role,\'active\')');
+                $stmt->execute([
+                    'name'=>$name,
+                    'email'=>$email,
+                    'hash'=>password_hash($password,PASSWORD_DEFAULT),
+                    'role'=>$role
+                ]);
+                header('Location: /admin.php?created=1');
+                exit;
+            }catch(PDOException $e){
+                $error=$e->getCode()==='23505'?'That email is already registered.':'Unable to create the account.';
+            }
+        }
+    } elseif($userId === (int)$admin['id']){
         $error='You cannot change your own account status from the admin panel.';
     } elseif($userId>0 && in_array($action,['activate','suspend'],true)){
         $status=$action==='activate'?'active':'suspended';
@@ -43,11 +68,25 @@ $admins=count(array_filter($users,fn($u)=>$u['role']==='admin'));
   </div>
   <?php if(!empty($error)): ?><div class="alert"><?=e($error)?></div><?php endif; ?>
   <?php if(isset($_GET['updated'])): ?><div class="admin-success">Account status updated successfully.</div><?php endif; ?>
+  <?php if(isset($_GET['created'])): ?><div class="admin-success">User account created successfully.</div><?php endif; ?>
 
   <section class="admin-stats">
     <div class="admin-stat"><span>Total users</span><strong><?=$totalUsers?></strong></div>
     <div class="admin-stat"><span>Active users</span><strong><?=$activeUsers?></strong></div>
     <div class="admin-stat"><span>Administrators</span><strong><?=$admins?></strong></div>
+  </section>
+
+  <section class="panel create-user-panel">
+    <div class="panel-head"><h2>Create user</h2><span>Admin only</span></div>
+    <form method="post" class="create-user-form">
+      <input type="hidden" name="csrf_token" value="<?=e(csrf_token())?>">
+      <input type="hidden" name="action" value="create_user">
+      <label>Name<input name="name" maxlength="100" autocomplete="name" required></label>
+      <label>Email<input name="email" type="email" autocomplete="email" required></label>
+      <label>Password<input name="password" type="password" minlength="12" autocomplete="new-password" required></label>
+      <label>Role<select name="role"><option value="user">User</option><option value="admin">Admin</option></select></label>
+      <button class="button button-dark" type="submit">Create account</button>
+    </form>
   </section>
 
   <section class="panel table-wrap admin-users">
