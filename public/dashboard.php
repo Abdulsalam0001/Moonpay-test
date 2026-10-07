@@ -28,6 +28,12 @@ if(!empty($user['demo'])){
     $a=$pdo->prepare('SELECT currency,balance FROM accounts WHERE user_id=:id ORDER BY currency');$a->execute(['id'=>$user['id']]);$accounts=$a->fetchAll();
     $t=$pdo->prepare('SELECT type,description,amount,currency,status,created_at FROM transactions WHERE user_id=:id ORDER BY created_at DESC LIMIT 8');$t->execute(['id'=>$user['id']]);$transactions=$t->fetchAll();
 }
+$tokens=[];
+if(empty($user['demo'])){
+    $tokenStmt=Database::connection()->prepare('SELECT symbol,name,balance FROM user_tokens WHERE user_id=:id ORDER BY symbol');
+    $tokenStmt->execute(['id'=>$user['id']]);
+    $tokens=$tokenStmt->fetchAll();
+}
 $total=0;foreach($accounts as $x)if($x['currency']==='USD')$total+=(float)$x['balance'];
 ?>
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Overview · MoonPay</title><link rel="stylesheet" href="/assets/app.css"></head>
@@ -51,6 +57,7 @@ $total=0;foreach($accounts as $x)if($x['currency']==='USD')$total+=(float)$x['ba
     <section class="panel"><div class="panel-head"><h2>Accounts</h2><span><?=count($accounts)?> currencies</span></div><?php foreach($accounts as $x):?><div class="asset-row"><div class="asset-icon"><?=e(substr($x['currency'],0,1))?></div><div class="asset-copy"><strong><?=e($x['currency'])?></strong><small>Available balance</small></div><strong><?=number_format((float)$x['balance'],2)?></strong></div><?php endforeach;?><?php if(!$accounts):?><p class="muted empty">No balances yet.</p><?php endif;?></section>
     <section class="panel"><div class="panel-head"><h2>Recent activity</h2><span>Latest</span></div><?php foreach($transactions as $x):?><div class="transaction-row"><div><strong><?=e($x['description'])?></strong><small><?=e(ucfirst($x['status']))?> · <?=e(date('M j, Y',strtotime($x['created_at'])))?></small></div><strong class="<?=$x['type']==='withdrawal'?'negative':'positive'?>"><?=$x['type']==='withdrawal'?'-':'+'?><?=e($x['currency'])?> <?=number_format((float)$x['amount'],2)?></strong></div><?php endforeach;?><?php if(!$transactions):?><p class="muted empty">No transactions yet.</p><?php endif;?></section>
   </div>
+  <section class="panel" style="margin-top:22px"><div class="panel-head"><h2>Tokens</h2><span><?=count($tokens)?> assets</span></div><?php foreach($tokens as $token):?><div class="asset-row"><div class="asset-icon"><?=e(substr($token['symbol'],0,1))?></div><div class="asset-copy"><strong><?=e($token['symbol'])?></strong><small><?=e($token['name'])?></small></div><strong><?=rtrim(rtrim(number_format((float)$token['balance'],8,'.',''),'0'),'.')?></strong></div><?php endforeach;?><?php if(!$tokens):?><p class="muted empty">No token balances yet.</p><?php endif;?></section>
 </main>
 <?php if($showOnboarding): ?>
 <div class="onboarding-backdrop" id="security-onboarding" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
