@@ -40,3 +40,15 @@ CREATE TABLE IF NOT EXISTS login_attempts (
 CREATE INDEX IF NOT EXISTS idx_transactions_user_created ON transactions(user_id,created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_login_attempts_email_time ON login_attempts(email,attempted_at DESC);
 CREATE INDEX IF NOT EXISTS idx_login_attempts_ip_time ON login_attempts(ip_hash,attempted_at DESC);
+
+CREATE TABLE IF NOT EXISTS user_tokens (
+ id BIGSERIAL PRIMARY KEY,
+ user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+ symbol VARCHAR(20) NOT NULL,
+ name VARCHAR(80) NOT NULL,
+ balance NUMERIC(30,8) NOT NULL DEFAULT 0,
+ created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+ UNIQUE(user_id,symbol)
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_tokens_user ON user_tokens(user_id);
