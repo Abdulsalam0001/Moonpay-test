@@ -43,7 +43,7 @@ function login(PDO $pdo,string $email,string $password):bool{
     $guard=$pdo->prepare(
         'SELECT COUNT(*) FROM login_attempts
          WHERE (email=:email OR ip_hash=:ip)
-         AND attempted_at > NOW() - INTERVAL '15 minutes'
+         AND attempted_at > NOW() - INTERVAL \'15 minutes\'
          AND successful=false'
     );
     $guard->execute(['email'=>$email,'ip'=>$ipHash]);
