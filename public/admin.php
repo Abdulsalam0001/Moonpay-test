@@ -8,7 +8,30 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
     $action=$_POST['action']??'';
     $userId=(int)($_POST['user_id']??0);
 
-    if($action==='create_user'){
+    if($action==='edit_user'){
+        $editId=(int)($_POST['edit_user_id']??0);
+        $name=trim((string)($_POST['name']??''));
+        $email=strtolower(trim((string)($_POST['email']??'')));
+        $role=in_array($_POST['role']??'user',['user','admin'],true)?$_POST['role']:'user';
+        $status=in_array($_POST['status']??'active',['active','suspended'],true)?$_POST['status']:'active';
+
+        if($editId<=0 || $name==='' || strlen($name)>100 || !filter_var($email,FILTER_VALIDATE_EMAIL)){
+            $error='Enter a valid name and email address.';
+        } else {
+            try{
+                if($editId===(int)$admin['id']){
+                    $role='admin';
+                    $status='active';
+                }
+                $stmt=$pdo->prepare('UPDATE users SET name=:name,email=:email,role=:role,status=:status WHERE id=:id');
+                $stmt->execute(['name'=>$name,'email'=>$email,'role'=>$role,'status'=>$status,'id'=>$editId]);
+                header('Location: /admin.php?edited=1');
+                exit;
+            }catch(PDOException $e){
+                $error=$e->getCode()==='23505'?'That email is already registered.':'Unable to update the account.';
+            }
+        }
+    } elseif($action==='create_user'){
         $name=trim((string)($_POST['name']??''));
         $email=strtolower(trim((string)($_POST['email']??'')));
         $password=(string)($_POST['password']??'');
@@ -69,6 +92,7 @@ $admins=count(array_filter($users,fn($u)=>$u['role']==='admin'));
   <?php if(!empty($error)): ?><div class="alert"><?=e($error)?></div><?php endif; ?>
   <?php if(isset($_GET['updated'])): ?><div class="admin-success">Account status updated successfully.</div><?php endif; ?>
   <?php if(isset($_GET['created'])): ?><div class="admin-success">User account created successfully.</div><?php endif; ?>
+  <?php if(isset($_GET['edited'])): ?><div class="admin-success">User details updated successfully.</div><?php endif; ?>
 
   <section class="admin-stats">
     <div class="admin-stat"><span>Total users</span><strong><?=$totalUsers?></strong></div>
@@ -89,6 +113,32 @@ $admins=count(array_filter($users,fn($u)=>$u['role']==='admin'));
     </form>
   </section>
 
+  <?php if(isset($_GET['edit'])):
+      $editId=(int)$_GET['edit'];
+      $editStmt=$pdo->prepare('SELECT id,name,email,role,status FROM users WHERE id=:id LIMIT 1');
+      $editStmt->execute(['id'=>$editId]);
+      $editUser=$editStmt->fetch();
+  ?>
+  <?php if($editUser): ?>
+  <section class="panel edit-user-panel">
+    <div class="panel-head"><h2>Edit user</h2><a class="edit-cancel" href="/admin.php">Cancel</a></div>
+    <form method="post" class="edit-user-form">
+      <input type="hidden" name="csrf_token" value="<?=e(csrf_token())?>">
+      <input type="hidden" name="action" value="edit_user">
+      <input type="hidden" name="edit_user_id" value="<?=e((string)$editUser['id'])?>">
+      <div class="edit-user-grid">
+        <label>Name<input name="name" maxlength="100" autocomplete="name" value="<?=e($editUser['name'])?>" required></label>
+        <label>Email<input name="email" type="email" autocomplete="email" value="<?=e($editUser['email'])?>" required></label>
+        <label>Role<select name="role" <?php if((int)$editUser['id']===(int)$admin['id']) echo 'disabled'; ?>><option value="user" <?=$editUser['role']==='user'?'selected':''?>>User</option><option value="admin" <?=$editUser['role']==='admin'?'selected':''?>>Admin</option></select></label>
+        <label>Status<select name="status" <?php if((int)$editUser['id']===(int)$admin['id']) echo 'disabled'; ?>><option value="active" <?=$editUser['status']==='active'?'selected':''?>>Active</option><option value="suspended" <?=$editUser['status']==='suspended'?'selected':''?>>Suspended</option></select></label>
+      </div>
+      <p class="edit-note"><?=(int)$editUser['id']===(int)$admin['id']?'Your own role and status are locked for safety.':'You can change the name, email, role, and status.'?></p>
+      <button class="button button-dark" type="submit">Save user details</button>
+    </form>
+  </section>
+  <?php endif; ?>
+  <?php endif; ?>
+
   <section class="panel table-wrap admin-users">
     <div class="panel-head"><h2>User accounts</h2><span><?=$totalUsers?> accounts</span></div>
     <table>
@@ -105,12 +155,15 @@ $admins=count(array_filter($users,fn($u)=>$u['role']==='admin'));
           <?php if((int)$u['id']===(int)$admin['id']): ?>
             <span class="you-label">You</span>
           <?php else: ?>
-            <form method="post" class="admin-action-form">
+            <div class="admin-row-actions">
+              <a class="admin-edit-link" href="/admin.php?edit=<?=e((string)$u['id'])?>">Edit</a>
+              <form method="post" class="admin-action-form">
               <input type="hidden" name="csrf_token" value="<?=e(csrf_token())?>">
               <input type="hidden" name="user_id" value="<?=e((string)$u['id'])?>">
               <input type="hidden" name="action" value="<?=$u['status']==='active'?'suspend':'activate'?>">
               <button class="admin-action <?=$u['status']==='active'?'danger-action':'activate-action'?>" type="submit"><?=$u['status']==='active'?'Suspend':'Activate'?></button>
-            </form>
+              </form>
+            </div>
           <?php endif; ?>
           </td>
         </tr>
