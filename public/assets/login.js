@@ -15,22 +15,37 @@
     return;
   }
 
-  function showStep(from, to) {
-    from.classList.add('login-leaving');
+  let animating = false;
+
+  function showStep(from, to, direction = 'forward') {
+    if (animating) return;
+    animating = true;
+
+    from.dataset.direction = direction;
+    from.classList.remove('login-leaving', 'login-leaving-reverse');
+    void from.offsetWidth;
+    from.classList.add(direction === 'forward' ? 'login-leaving' : 'login-leaving-reverse');
 
     window.setTimeout(() => {
       from.hidden = true;
-      from.classList.remove('login-leaving');
+      from.classList.remove('login-leaving', 'login-leaving-reverse');
+
       to.hidden = false;
-      to.classList.remove('login-entering');
+      to.dataset.direction = direction;
+      to.classList.remove('login-entering', 'login-entering-reverse');
       void to.offsetWidth;
-      to.classList.add('login-entering');
-    }, 160);
+      to.classList.add(direction === 'forward' ? 'login-entering' : 'login-entering-reverse');
+
+      window.setTimeout(() => {
+        to.classList.remove('login-entering', 'login-entering-reverse');
+        animating = false;
+      }, 520);
+    }, 300);
   }
 
   continueBtn.addEventListener('click', () => {
-    if (!email.checkValidity()) {
-      email.reportValidity();
+    if (animating || !email.checkValidity()) {
+      if (!email.checkValidity()) email.reportValidity();
       return;
     }
 
@@ -39,15 +54,20 @@
     display.textContent = value;
     password.required = true;
 
-    showStep(emailStep, passwordStep);
-    window.setTimeout(() => password.focus(), 190);
+    // Deliberately pauses before the next screen swipes in from the right.
+    showStep(emailStep, passwordStep, 'forward');
+    window.setTimeout(() => password.focus(), 820);
   });
 
   changeEmail.addEventListener('click', (event) => {
     event.preventDefault();
+    if (animating) return;
+
     password.required = false;
-    showStep(passwordStep, emailStep);
-    window.setTimeout(() => email.focus(), 190);
+
+    // Reverse direction: the email screen swipes back in from the left.
+    showStep(passwordStep, emailStep, 'reverse');
+    window.setTimeout(() => email.focus(), 820);
   });
 
   form.addEventListener('submit', () => {
