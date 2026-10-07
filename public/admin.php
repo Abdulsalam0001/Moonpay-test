@@ -122,11 +122,11 @@ $admins=count(array_filter($users,fn($u)=>$u['role']==='admin'));
   <?php if($editUser): ?>
   <section class="panel edit-user-panel">
     <div class="panel-head"><h2>Edit user</h2><a class="edit-cancel" href="/admin.php">Cancel</a></div>
-    <form method="post" class="edit-user-form">
+    <form method="post" class="create-user-form">
       <input type="hidden" name="csrf_token" value="<?=e(csrf_token())?>">
       <input type="hidden" name="action" value="edit_user">
       <input type="hidden" name="edit_user_id" value="<?=e((string)$editUser['id'])?>">
-      <div class="edit-user-grid">
+      <div class="create-user-form">
         <label>Name<input name="name" maxlength="100" autocomplete="name" value="<?=e($editUser['name'])?>" required></label>
         <label>Email<input name="email" type="email" autocomplete="email" value="<?=e($editUser['email'])?>" required></label>
         <label>Role<select name="role" <?php if((int)$editUser['id']===(int)$admin['id']) echo 'disabled'; ?>><option value="user" <?=$editUser['role']==='user'?'selected':''?>>User</option><option value="admin" <?=$editUser['role']==='admin'?'selected':''?>>Admin</option></select></label>
