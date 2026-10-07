@@ -15,27 +15,39 @@
     return;
   }
 
-  continueBtn.addEventListener('click', () => {
-    const value = email.value.trim().toLowerCase();
+  function showStep(from, to) {
+    from.classList.add('login-leaving');
 
+    window.setTimeout(() => {
+      from.hidden = true;
+      from.classList.remove('login-leaving');
+      to.hidden = false;
+      to.classList.remove('login-entering');
+      void to.offsetWidth;
+      to.classList.add('login-entering');
+    }, 160);
+  }
+
+  continueBtn.addEventListener('click', () => {
     if (!email.checkValidity()) {
       email.reportValidity();
       return;
     }
 
+    const value = email.value.trim().toLowerCase();
+    email.value = value;
     display.textContent = value;
-    emailStep.hidden = true;
-    passwordStep.hidden = false;
     password.required = true;
-    password.focus();
+
+    showStep(emailStep, passwordStep);
+    window.setTimeout(() => password.focus(), 190);
   });
 
   changeEmail.addEventListener('click', (event) => {
     event.preventDefault();
-    passwordStep.hidden = true;
-    emailStep.hidden = false;
     password.required = false;
-    password.focus();
+    showStep(passwordStep, emailStep);
+    window.setTimeout(() => email.focus(), 190);
   });
 
   form.addEventListener('submit', () => {
