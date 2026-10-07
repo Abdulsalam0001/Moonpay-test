@@ -24,7 +24,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
  else $error='Unable to sign in with those credentials.';
 }
 ?>
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sign in · MoonPay</title><link rel="stylesheet" href="/assets/app.css"></head>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sign in · MoonPay</title><link rel="stylesheet" href="/assets/app.css"><script src="/assets/login.js" defer></script></head>
 <body class="auth-page">
 <main class="auth-card">
 <div class="brand"><span class="brand-mark">M</span><span>moonpay</span></div>
@@ -32,7 +32,6 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 <?php if($error):?><div class="alert"><?=e($error)?></div><?php endif;?>
 <form method="post" id="login-form">
 <input type="hidden" name="csrf_token" value="<?=e(csrf_token())?>">
-<input type="hidden" name="action" value="login">
 <div class="hp-field" aria-hidden="true"><label>Website<input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
 <div id="email-step">
 <label>Email<input id="email" type="email" name="email" autocomplete="email" required autofocus></label>
@@ -46,34 +45,4 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 </div>
 </form>
 </main>
-<script>
-const form=document.getElementById('login-form');
-const emailStep=document.getElementById('email-step');
-const passwordStep=document.getElementById('password-step');
-const email=document.getElementById('email');
-const display=document.getElementById('email-display');
-const continueBtn=document.getElementById('continue-btn');
-const password=document.getElementById('password');
-continueBtn.addEventListener('click',()=>{
- const value=email.value.trim().toLowerCase();
- if(!email.checkValidity()){email.reportValidity();return;}
- display.textContent=value;
- emailStep.hidden=true;
- passwordStep.hidden=false;
- password.required=true;
- password.focus();
-});
-document.getElementById('change-email').addEventListener('click',(event)=>{
- event.preventDefault();
- passwordStep.hidden=true;
- emailStep.hidden=false;
- password.required=false;
- email.focus();
-});
-form.addEventListener('submit',()=>{
- const button=document.getElementById('signin-btn');
- button.disabled=true;
- button.textContent='Loading…';
-});
-</script>
 </body></html>
