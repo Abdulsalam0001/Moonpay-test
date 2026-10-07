@@ -34,7 +34,7 @@ $total=0;foreach($accounts as $x)if($x['currency']==='USD')$total+=(float)$x['ba
 <body>
 <header class="topbar">
   <a class="brand" href="/dashboard.php"><span class="brand-mark">M</span><span>moonpay</span></a>
-  <nav><a class="nav-active" href="/dashboard.php">Overview</a><?php if($user['role']==='admin'):?><a href="/admin.php">Admin</a><?php endif;?><a href="/logout.php">Log out</a></nav>
+  <nav><a class="nav-active" href="/dashboard.php">Overview</a><?php if(($user['role']??'')==='admin' && empty($user['demo'])):?><a href="/admin.php">Admin</a><?php endif;?><a href="/logout.php">Log out</a></nav>
 </header>
 <main class="shell">
   <div class="hero-row">
