@@ -1,8 +1,24 @@
 <?php
 require_once __DIR__.'/../src/bootstrap.php';
-$user=require_auth();$pdo=Database::connection();
-$a=$pdo->prepare('SELECT currency,balance FROM accounts WHERE user_id=:id ORDER BY currency');$a->execute(['id'=>$user['id']]);$accounts=$a->fetchAll();
-$t=$pdo->prepare('SELECT type,description,amount,currency,status,created_at FROM transactions WHERE user_id=:id ORDER BY created_at DESC LIMIT 8');$t->execute(['id'=>$user['id']]);$transactions=$t->fetchAll();
+$user=require_auth();
+
+if(!empty($user['demo'])){
+    $accounts=[
+        ['currency'=>'USD','balance'=>125000.00],
+        ['currency'=>'EUR','balance'=>18400.50],
+        ['currency'=>'GBP','balance'=>9200.00],
+        ['currency'=>'NGN','balance'=>2850000.00],
+    ];
+    $transactions=[
+        ['type'=>'deposit','description'=>'Demo account funding','amount'=>25000,'currency'=>'USD','status'=>'completed','created_at'=>date('Y-m-d H:i:s',strtotime('-2 hours'))],
+        ['type'=>'purchase','description'=>'Crypto purchase','amount'=>4200,'currency'=>'USD','status'=>'completed','created_at'=>date('Y-m-d H:i:s',strtotime('-1 day'))],
+        ['type'=>'withdrawal','description'=>'Bank withdrawal','amount'=>1800,'currency'=>'USD','status'=>'completed','created_at'=>date('Y-m-d H:i:s',strtotime('-3 days'))],
+    ];
+}else{
+    $pdo=Database::connection();
+    $a=$pdo->prepare('SELECT currency,balance FROM accounts WHERE user_id=:id ORDER BY currency');$a->execute(['id'=>$user['id']]);$accounts=$a->fetchAll();
+    $t=$pdo->prepare('SELECT type,description,amount,currency,status,created_at FROM transactions WHERE user_id=:id ORDER BY created_at DESC LIMIT 8');$t->execute(['id'=>$user['id']]);$transactions=$t->fetchAll();
+}
 $total=0;foreach($accounts as $x)if($x['currency']==='USD')$total+=(float)$x['balance'];
 ?>
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Dashboard · MoonPay</title><link rel="stylesheet" href="/assets/app.css"></head>
@@ -16,6 +32,7 @@ $total=0;foreach($accounts as $x)if($x['currency']==='USD')$total+=(float)$x['ba
     <div><p class="eyebrow">Overview</p><h1>Your money, clearly.</h1><p class="muted">Welcome back, <?=e($user['name'])?>. Here is your latest account activity.</p></div>
     <button class="button button-dark" type="button">Buy crypto</button>
   </div>
+  <?php if(!empty($user['demo'])):?><div class="alert">Demo mode · database is not required for this preview.</div><?php endif;?>
   <section class="balance-card">
     <div><span>Total USD balance</span><small class="balance-label">Available balance</small></div>
     <strong>$<?=number_format($total,2)?></strong>
