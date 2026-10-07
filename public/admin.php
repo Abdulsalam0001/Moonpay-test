@@ -156,7 +156,7 @@ $admins=count(array_filter($users,fn($u)=>$u['role']==='admin'));
             <span class="you-label">You</span>
           <?php else: ?>
             <div class="admin-row-actions">
-              <a class="admin-edit-link" href="/admin.php?edit=<?=e((string)$u['id'])?>">Edit</a>
+              <a class="admin-edit-link" href="/admin.php?edit=<?=e((string)$u['id'])?>">Edit</a><a class="admin-edit-link" href="/manage-user.php?id=<?=e((string)$u['id'])?>">Manage</a>
               <form method="post" class="admin-action-form">
               <input type="hidden" name="csrf_token" value="<?=e(csrf_token())?>">
               <input type="hidden" name="user_id" value="<?=e((string)$u['id'])?>">
