@@ -29,4 +29,14 @@ CREATE TABLE IF NOT EXISTS transactions (
  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS login_attempts (
+ id BIGSERIAL PRIMARY KEY,
+ email VARCHAR(255) NOT NULL,
+ ip_hash CHAR(64) NOT NULL,
+ attempted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+ successful BOOLEAN NOT NULL DEFAULT FALSE
+);
+
 CREATE INDEX IF NOT EXISTS idx_transactions_user_created ON transactions(user_id,created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_login_attempts_email_time ON login_attempts(email,attempted_at DESC);
+CREATE INDEX IF NOT EXISTS idx_login_attempts_ip_time ON login_attempts(ip_hash,attempted_at DESC);
