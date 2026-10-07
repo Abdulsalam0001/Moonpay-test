@@ -2,6 +2,15 @@
 require_once __DIR__.'/../src/bootstrap.php';
 $user=require_auth();
 
+if($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['action']??'')==='complete_onboarding'){
+    verify_csrf($_POST['csrf_token']??null);
+    $_SESSION['onboarding_seen']=true;
+    header('Location: /dashboard.php');
+    exit;
+}
+
+$showOnboarding=empty($_SESSION['onboarding_seen']);
+
 if(!empty($user['demo'])){
     $accounts=[
         ['currency'=>'USD','balance'=>125000.00],
@@ -34,11 +43,16 @@ $total=0;foreach($accounts as $x)if($x['currency']==='USD')$total+=(float)$x['ba
   </div>
   <?php if(!empty($user['demo'])):?><div class="demo-notice"><div><strong>Demo environment</strong><span>This account is simulated and does not connect to a live blockchain.</span></div><span class="restriction-pill">Mainnet access restricted</span></div><?php endif;?>
   <?php if(!empty($user['demo'])):?><section class="restricted-card"><div class="restricted-icon">!</div><div><p class="eyebrow">Token access</p><h2>Mainnet access is restricted</h2><p class="muted">The tokens shown in this demo are simulated balances. Mainnet transfers, withdrawals, and blockchain transactions are unavailable.</p></div></section><?php endif;?>
+  <section class="dashboard-cards">
+    <article class="info-card info-card-blue"><div class="info-card-icon">◉</div><div><p class="eyebrow">Wallet & security</p><h2>Understand your wallet</h2><p>Your wallet is non-custodial. Account access and control of blockchain assets are not the same thing.</p><a href="#wallet-security">Learn about wallet security <span>→</span></a></div></article>
+    <article class="info-card info-card-dark"><div class="info-card-icon">✓</div><div><p class="eyebrow">Stay protected</p><h2>Keep your recovery phrase private</h2><p>Never share recovery phrases, private keys, passwords, or security codes with anyone.</p><a href="#wallet-security">View security guidance <span>→</span></a></div></article>
+  </section>
   <section class="balance-card">
     <div><span>Total USD balance</span><small class="balance-label">Available balance</small></div>
     <strong>$<?=number_format($total,2)?></strong>
     <div class="balance-meta"><span>Portfolio</span><span><?=!empty($user['demo'])?'Demo account · No mainnet access':'Live account view'?></span></div>
   </section>
+  <section class="security-panel" id="wallet-security"><div class="security-panel-head"><div><p class="eyebrow">Wallet & Security</p><h2>Know what your account controls</h2></div><span>Security basics</span></div><div class="security-grid"><div><strong>Non-custodial wallet</strong><p>Your wallet is designed so control of the wallet credentials remains with you.</p></div><div><strong>Restrictions are different</strong><p>An account restriction can limit service access without automatically freezing the underlying blockchain assets.</p></div><div><strong>Protect your recovery phrase</strong><p>Anyone with your recovery phrase may be able to control the associated wallet. Keep it private and offline.</p></div></div></section>
   <div class="grid-2">
     <section class="panel"><div class="panel-head"><h2>Assets</h2><span><?=count($accounts)?> currencies</span></div>
       <?php foreach($accounts as $x):?><div class="asset-row"><div class="asset-icon"><?=e(substr($x['currency'],0,1))?></div><div class="asset-copy"><strong><?=e($x['currency'])?></strong><small>Available balance</small></div><strong><?=number_format((float)$x['balance'],2)?></strong></div><?php endforeach;?>
@@ -50,4 +64,20 @@ $total=0;foreach($accounts as $x)if($x['currency']==='USD')$total+=(float)$x['ba
     </section>
   </div>
 </main>
+<?php if($showOnboarding): ?>
+<div class="onboarding-backdrop" id="security-onboarding" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
+  <section class="onboarding-modal">
+    <div class="onboarding-top"><span class="onboarding-brand"><span class="brand-mark">M</span> moonpay</span><span id="onboarding-count">1 / 4</span></div>
+    <div class="onboarding-track" id="onboarding-track">
+      <article class="onboarding-slide is-active"><div class="onboarding-icon">◉</div><p class="eyebrow">Wallet basics</p><h2 id="onboarding-title">Your wallet is non-custodial</h2><p>Your wallet credentials control access to the associated blockchain assets. Your account login and wallet ownership are not the same thing.</p></article>
+      <article class="onboarding-slide"><div class="onboarding-icon">!</div><p class="eyebrow">Account access</p><h2>Restrictions are different from a blockchain freeze</h2><p>An account restriction can limit services while the underlying blockchain continues to record the wallet's assets and transactions.</p></article>
+      <article class="onboarding-slide"><div class="onboarding-icon">⌁</div><p class="eyebrow">Wallet security</p><h2>Keep your recovery phrase private</h2><p>Never share your recovery phrase, private key, password, or security codes with someone claiming to provide support.</p></article>
+      <article class="onboarding-slide"><div class="onboarding-icon">✓</div><p class="eyebrow">Stay protected</p><h2>You are in control</h2><p>Review wallet addresses and networks before sending assets, and treat unexpected recovery or payment requests with caution.</p></article>
+    </div>
+    <div class="onboarding-dots"><span class="is-active"></span><span></span><span></span><span></span></div>
+    <div class="onboarding-actions"><button class="button button-dark" type="button" id="onboarding-next">Continue</button><form method="post" id="onboarding-complete"><input type="hidden" name="action" value="complete_onboarding"><input type="hidden" name="csrf_token" value="<?=e(csrf_token())?>"><button class="button button-dark" type="submit">Got it — Continue to dashboard</button></form><button class="onboarding-skip" type="submit" form="onboarding-complete">Skip for now</button></div>
+  </section>
+</div>
+<script src="/assets/dashboard.js" defer></script>
+<?php endif; ?>
 </body></html>
