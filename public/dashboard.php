@@ -41,9 +41,9 @@ $total=0;foreach($accounts as $x)if($x['currency']==='USD')$total+=(float)$x['ba
   <?php if(!empty($user['demo'])):?><div class="demo-notice"><div><strong>Demo environment</strong><span>This account is simulated and does not connect to a live blockchain.</span></div><span class="restriction-pill">Mainnet access restricted</span></div><?php endif;?>
   <section class="balance-card financial-balance"><div><span>Total USD balance</span><small class="balance-label">Available balance</small></div><strong>$<?=number_format($total,2)?></strong><div class="balance-meta"><span><?=!empty($user['demo'])?'Demo portfolio':'Portfolio'?></span><span><?=!empty($user['demo'])?'No mainnet access':'Account balance'?></span></div></section>
   <section class="quick-actions">
-    <a href="#" class="quick-action"><span>＋</span><strong>Buy crypto</strong><small>Purchase assets</small></a>
-    <a href="#" class="quick-action"><span>↗</span><strong>Send</strong><small>Transfer assets</small></a>
-    <a href="#" class="quick-action"><span>↓</span><strong>Receive</strong><small>View deposit details</small></a>
+    <a href="/account-action.php?action=buy" class="quick-action"><span>＋</span><strong>Buy crypto</strong><small>Purchase assets</small></a>
+    <a href="/account-action.php?action=send" class="quick-action"><span>↗</span><strong>Send</strong><small>Transfer assets</small></a>
+    <a href="/account-action.php?action=receive" class="quick-action"><span>↓</span><strong>Receive</strong><small>View deposit details</small></a>
     <a href="/help.php" class="quick-action"><span>?</span><strong>Get help</strong><small>Wallet & account guidance</small></a>
   </section>
   <?php if(!empty($user['demo'])):?><section class="restricted-card"><div class="restricted-icon">!</div><div><p class="eyebrow">Token access</p><h2>Mainnet access is restricted</h2><p class="muted">The balances shown here are simulated. Mainnet transfers, withdrawals, and blockchain transactions are unavailable.</p></div></section><?php endif;?>
