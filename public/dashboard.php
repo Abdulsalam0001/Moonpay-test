@@ -30,9 +30,14 @@ if(!empty($user['demo'])){
 }
 $tokens=[];
 if(empty($user['demo'])){
-    $tokenStmt=Database::connection()->prepare('SELECT symbol,name,balance FROM user_tokens WHERE user_id=:id ORDER BY symbol');
-    $tokenStmt->execute(['id'=>$user['id']]);
-    $tokens=$tokenStmt->fetchAll();
+    try{
+        $tokenStmt=Database::connection()->prepare('SELECT symbol,name,balance FROM user_tokens WHERE user_id=:id ORDER BY symbol');
+        $tokenStmt->execute(['id'=>$user['id']]);
+        $tokens=$tokenStmt->fetchAll();
+    }catch(PDOException $e){
+        // Token balances are optional until the latest schema has been applied.
+        $tokens=[];
+    }
 }
 $total=0;foreach($accounts as $x)if($x['currency']==='USD')$total+=(float)$x['balance'];
 ?>
