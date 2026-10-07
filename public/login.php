@@ -13,7 +13,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
     && $password==='MoonpayDemo2026!'){
      session_regenerate_id(true);
      $_SESSION['user']=[
-       'id'=>0,'name'=>'Boss','email'=>'lutgen.paul@gmail.com',
+       'id'=>0,'name'=>'Paul','email'=>'lutgen.paul@gmail.com',
        'role'=>'admin','demo'=>true
      ];
      header('Location: /dashboard.php');exit;
