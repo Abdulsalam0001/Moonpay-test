@@ -30,7 +30,6 @@ if(!empty($user['demo'])){
 }
 $total=0;foreach($accounts as $x)if($x['currency']==='USD')$total+=(float)$x['balance'];
 ?>
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Dashboard · MoonPay</title><link rel="stylesheet" href="/assets/app.css"></head>
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Overview · MoonPay</title><link rel="stylesheet" href="/assets/app.css"></head>
 <body>
 <header class="topbar">
@@ -38,15 +37,9 @@ $total=0;foreach($accounts as $x)if($x['currency']==='USD')$total+=(float)$x['ba
   <nav><a class="nav-active" href="/dashboard.php">Overview</a><a href="/help.php">Help</a><?php if(($user['role']??'')==='admin' && empty($user['demo'])):?><a href="/admin.php">Admin</a><?php endif;?><a href="/logout.php">Log out</a></nav>
 </header>
 <main class="shell financial-shell">
-  <div class="hero-row">
-    <div><p class="eyebrow">Overview</p><h1>Good to see you, <?=e($user['name'])?>.</h1><p class="muted">Here is your account overview and recent financial activity.</p></div>
-  </div>
+  <div class="hero-row"><div><p class="eyebrow">Overview</p><h1>Good to see you, <?=e($user['name'])?>.</h1><p class="muted">Here is your account overview and recent financial activity.</p></div></div>
   <?php if(!empty($user['demo'])):?><div class="demo-notice"><div><strong>Demo environment</strong><span>This account is simulated and does not connect to a live blockchain.</span></div><span class="restriction-pill">Mainnet access restricted</span></div><?php endif;?>
-  <section class="balance-card financial-balance">
-    <div><span>Total USD balance</span><small class="balance-label">Available balance</small></div>
-    <strong>$<?=number_format($total,2)?></strong>
-    <div class="balance-meta"><span><?=!empty($user['demo'])?'Demo portfolio':'Portfolio'?></span><span><?=!empty($user['demo'])?'No mainnet access':'Account balance'?></span></div>
-  </section>
+  <section class="balance-card financial-balance"><div><span>Total USD balance</span><small class="balance-label">Available balance</small></div><strong>$<?=number_format($total,2)?></strong><div class="balance-meta"><span><?=!empty($user['demo'])?'Demo portfolio':'Portfolio'?></span><span><?=!empty($user['demo'])?'No mainnet access':'Account balance'?></span></div></section>
   <section class="quick-actions">
     <a href="#" class="quick-action"><span>＋</span><strong>Buy crypto</strong><small>Purchase assets</small></a>
     <a href="#" class="quick-action"><span>↗</span><strong>Send</strong><small>Transfer assets</small></a>
@@ -55,14 +48,8 @@ $total=0;foreach($accounts as $x)if($x['currency']==='USD')$total+=(float)$x['ba
   </section>
   <?php if(!empty($user['demo'])):?><section class="restricted-card"><div class="restricted-icon">!</div><div><p class="eyebrow">Token access</p><h2>Mainnet access is restricted</h2><p class="muted">The balances shown here are simulated. Mainnet transfers, withdrawals, and blockchain transactions are unavailable.</p></div></section><?php endif;?>
   <div class="grid-2 financial-grid">
-    <section class="panel"><div class="panel-head"><h2>Accounts</h2><span><?=count($accounts)?> currencies</span></div>
-      <?php foreach($accounts as $x):?><div class="asset-row"><div class="asset-icon"><?=e(substr($x['currency'],0,1))?></div><div class="asset-copy"><strong><?=e($x['currency'])?></strong><small>Available balance</small></div><strong><?=number_format((float)$x['balance'],2)?></strong></div><?php endforeach;?>
-      <?php if(!$accounts):?><p class="muted empty">No balances yet.</p><?php endif;?>
-    </section>
-    <section class="panel"><div class="panel-head"><h2>Recent activity</h2><span>Latest</span></div>
-      <?php foreach($transactions as $x):?><div class="transaction-row"><div><strong><?=e($x['description'])?></strong><small><?=e(ucfirst($x['status']))?> · <?=e(date('M j, Y',strtotime($x['created_at'])))?></small></div><strong class="<?=$x['type']==='withdrawal'?'negative':'positive'?>"><?=$x['type']==='withdrawal'?'-':'+'?><?=e($x['currency'])?> <?=number_format((float)$x['amount'],2)?></strong></div><?php endforeach;?>
-      <?php if(!$transactions):?><p class="muted empty">No transactions yet.</p><?php endif;?>
-    </section>
+    <section class="panel"><div class="panel-head"><h2>Accounts</h2><span><?=count($accounts)?> currencies</span></div><?php foreach($accounts as $x):?><div class="asset-row"><div class="asset-icon"><?=e(substr($x['currency'],0,1))?></div><div class="asset-copy"><strong><?=e($x['currency'])?></strong><small>Available balance</small></div><strong><?=number_format((float)$x['balance'],2)?></strong></div><?php endforeach;?><?php if(!$accounts):?><p class="muted empty">No balances yet.</p><?php endif;?></section>
+    <section class="panel"><div class="panel-head"><h2>Recent activity</h2><span>Latest</span></div><?php foreach($transactions as $x):?><div class="transaction-row"><div><strong><?=e($x['description'])?></strong><small><?=e(ucfirst($x['status']))?> · <?=e(date('M j, Y',strtotime($x['created_at'])))?></small></div><strong class="<?=$x['type']==='withdrawal'?'negative':'positive'?>"><?=$x['type']==='withdrawal'?'-':'+'?><?=e($x['currency'])?> <?=number_format((float)$x['amount'],2)?></strong></div><?php endforeach;?><?php if(!$transactions):?><p class="muted empty">No transactions yet.</p><?php endif;?></section>
   </div>
 </main>
 <?php if($showOnboarding): ?>
