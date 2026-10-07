@@ -32,11 +32,12 @@ $total=0;foreach($accounts as $x)if($x['currency']==='USD')$total+=(float)$x['ba
     <div><p class="eyebrow">Overview</p><h1>Your money, clearly.</h1><p class="muted">Welcome back, <?=e($user['name'])?>. Here is your latest account activity.</p></div>
     <button class="button button-dark" type="button">Buy crypto</button>
   </div>
-  <?php if(!empty($user['demo'])):?><div class="alert">Demo mode · database is not required for this preview.</div><?php endif;?>
+  <?php if(!empty($user['demo'])):?><div class="demo-notice"><div><strong>Demo environment</strong><span>This account is simulated and does not connect to a live blockchain.</span></div><span class="restriction-pill">Mainnet access restricted</span></div><?php endif;?>
+  <?php if(!empty($user['demo'])):?><section class="restricted-card"><div class="restricted-icon">!</div><div><p class="eyebrow">Token access</p><h2>Mainnet access is restricted</h2><p class="muted">The tokens shown in this demo are simulated balances. Mainnet transfers, withdrawals, and blockchain transactions are unavailable.</p></div></section><?php endif;?>
   <section class="balance-card">
     <div><span>Total USD balance</span><small class="balance-label">Available balance</small></div>
     <strong>$<?=number_format($total,2)?></strong>
-    <div class="balance-meta"><span>Portfolio</span><span>Live account view</span></div>
+    <div class="balance-meta"><span>Portfolio</span><span><?=!empty($user['demo'])?'Demo account · No mainnet access':'Live account view'?></span></div>
   </section>
   <div class="grid-2">
     <section class="panel"><div class="panel-head"><h2>Assets</h2><span><?=count($accounts)?> currencies</span></div>
