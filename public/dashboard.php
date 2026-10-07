@@ -31,30 +31,31 @@ if(!empty($user['demo'])){
 $total=0;foreach($accounts as $x)if($x['currency']==='USD')$total+=(float)$x['balance'];
 ?>
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Dashboard · MoonPay</title><link rel="stylesheet" href="/assets/app.css"></head>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Overview · MoonPay</title><link rel="stylesheet" href="/assets/app.css"></head>
 <body>
 <header class="topbar">
   <a class="brand" href="/dashboard.php"><span class="brand-mark">M</span><span>moonpay</span></a>
-  <nav><a class="nav-active" href="/dashboard.php">Overview</a><?php if(($user['role']??'')==='admin' && empty($user['demo'])):?><a href="/admin.php">Admin</a><?php endif;?><a href="/logout.php">Log out</a></nav>
+  <nav><a class="nav-active" href="/dashboard.php">Overview</a><a href="/help.php">Help</a><?php if(($user['role']??'')==='admin' && empty($user['demo'])):?><a href="/admin.php">Admin</a><?php endif;?><a href="/logout.php">Log out</a></nav>
 </header>
-<main class="shell">
+<main class="shell financial-shell">
   <div class="hero-row">
-    <div><p class="eyebrow">Overview</p><h1>Your money, clearly.</h1><p class="muted">Welcome back, <?=e($user['name'])?>. Here is your latest account activity.</p></div>
-    <button class="button button-dark" type="button">Buy crypto</button>
+    <div><p class="eyebrow">Overview</p><h1>Good to see you, <?=e($user['name'])?>.</h1><p class="muted">Here is your account overview and recent financial activity.</p></div>
   </div>
   <?php if(!empty($user['demo'])):?><div class="demo-notice"><div><strong>Demo environment</strong><span>This account is simulated and does not connect to a live blockchain.</span></div><span class="restriction-pill">Mainnet access restricted</span></div><?php endif;?>
-  <?php if(!empty($user['demo'])):?><section class="restricted-card"><div class="restricted-icon">!</div><div><p class="eyebrow">Token access</p><h2>Mainnet access is restricted</h2><p class="muted">The tokens shown in this demo are simulated balances. Mainnet transfers, withdrawals, and blockchain transactions are unavailable.</p></div></section><?php endif;?>
-  <section class="dashboard-cards">
-    <article class="info-card info-card-blue"><div class="info-card-icon">◉</div><div><p class="eyebrow">Wallet & security</p><h2>Understand your wallet</h2><p>Your wallet is non-custodial. Account access and control of blockchain assets are not the same thing.</p><a href="#wallet-security">Learn about wallet security <span>→</span></a></div></article>
-    <article class="info-card info-card-dark"><div class="info-card-icon">✓</div><div><p class="eyebrow">Stay protected</p><h2>Keep your recovery phrase private</h2><p>Never share recovery phrases, private keys, passwords, or security codes with anyone.</p><a href="#wallet-security">View security guidance <span>→</span></a></div></article>
-  </section>
-  <section class="balance-card">
+  <section class="balance-card financial-balance">
     <div><span>Total USD balance</span><small class="balance-label">Available balance</small></div>
     <strong>$<?=number_format($total,2)?></strong>
-    <div class="balance-meta"><span>Portfolio</span><span><?=!empty($user['demo'])?'Demo account · No mainnet access':'Live account view'?></span></div>
+    <div class="balance-meta"><span><?=!empty($user['demo'])?'Demo portfolio':'Portfolio'?></span><span><?=!empty($user['demo'])?'No mainnet access':'Account balance'?></span></div>
   </section>
-  <section class="security-panel" id="wallet-security"><div class="security-panel-head"><div><p class="eyebrow">Wallet & Security</p><h2>Know what your account controls</h2></div><span>Security basics</span></div><div class="security-grid"><div><strong>Non-custodial wallet</strong><p>Your wallet is designed so control of the wallet credentials remains with you.</p></div><div><strong>Restrictions are different</strong><p>An account restriction can limit service access without automatically freezing the underlying blockchain assets.</p></div><div><strong>Protect your recovery phrase</strong><p>Anyone with your recovery phrase may be able to control the associated wallet. Keep it private and offline.</p></div></div></section>
-  <div class="grid-2">
-    <section class="panel"><div class="panel-head"><h2>Assets</h2><span><?=count($accounts)?> currencies</span></div>
+  <section class="quick-actions">
+    <a href="#" class="quick-action"><span>＋</span><strong>Buy crypto</strong><small>Purchase assets</small></a>
+    <a href="#" class="quick-action"><span>↗</span><strong>Send</strong><small>Transfer assets</small></a>
+    <a href="#" class="quick-action"><span>↓</span><strong>Receive</strong><small>View deposit details</small></a>
+    <a href="/help.php" class="quick-action"><span>?</span><strong>Get help</strong><small>Wallet & account guidance</small></a>
+  </section>
+  <?php if(!empty($user['demo'])):?><section class="restricted-card"><div class="restricted-icon">!</div><div><p class="eyebrow">Token access</p><h2>Mainnet access is restricted</h2><p class="muted">The balances shown here are simulated. Mainnet transfers, withdrawals, and blockchain transactions are unavailable.</p></div></section><?php endif;?>
+  <div class="grid-2 financial-grid">
+    <section class="panel"><div class="panel-head"><h2>Accounts</h2><span><?=count($accounts)?> currencies</span></div>
       <?php foreach($accounts as $x):?><div class="asset-row"><div class="asset-icon"><?=e(substr($x['currency'],0,1))?></div><div class="asset-copy"><strong><?=e($x['currency'])?></strong><small>Available balance</small></div><strong><?=number_format((float)$x['balance'],2)?></strong></div><?php endforeach;?>
       <?php if(!$accounts):?><p class="muted empty">No balances yet.</p><?php endif;?>
     </section>
