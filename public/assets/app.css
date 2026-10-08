@@ -24,3 +24,25 @@
 
 .send-form-heading{display:flex;justify-content:space-between;align-items:end;gap:16px;margin:26px 0 4px;padding-bottom:13px;border-bottom:1px solid var(--line)}.send-form-heading span{font-size:14px;font-weight:750}.send-form-heading small{font-size:11px;color:var(--muted)}
 @media(max-width:720px){.send-form-heading{align-items:flex-start;flex-direction:column;gap:4px}}
+
+/* Blue accent layer */
+:root{--accent-blue:#1769d2;--accent-blue-soft:#eef5ff;--accent-blue-border:#cfe0fa}
+a{transition:color .18s ease,background-color .18s ease,border-color .18s ease}
+.topbar a:hover,.nav a:hover{color:var(--accent-blue)}
+.brand-mark{background:var(--accent-blue);box-shadow:0 5px 16px rgba(23,105,210,.18)}
+.eyebrow{color:var(--accent-blue)}
+.panel,.action-panel{border-top:3px solid var(--accent-blue)}
+.quick-action:hover{border-color:var(--accent-blue);box-shadow:0 8px 22px rgba(23,105,210,.08);transform:translateY(-1px)}
+.button-dark{background:var(--accent-blue)}
+.button-dark:hover{background:#1257b0}
+.button-light:hover{border-color:var(--accent-blue);color:var(--accent-blue);background:var(--accent-blue-soft)}
+.balance-card{background:linear-gradient(135deg,#fff 0%,#f8fbff 72%,#eef5ff 100%);border-color:var(--accent-blue-border)}
+.balance-card .balance-label:before{background:var(--accent-blue)}
+.account-card:hover{border-color:var(--accent-blue-border)}
+.send-form-heading{border-bottom-color:var(--accent-blue-border)}
+.send-available{background:var(--accent-blue-soft);border-left:3px solid var(--accent-blue)}
+.wallet-field input:focus,.wallet-field select:focus{border-color:var(--accent-blue);box-shadow:0 0 0 3px rgba(23,105,210,.12)}
+.deposit-address-card{border-color:var(--accent-blue-border)}
+.address-network{color:var(--accent-blue);background:var(--accent-blue-soft)}
+.copy-address:hover{background:#1257b0}
+.help-card:hover{border-color:var(--accent-blue-border);box-shadow:0 8px 22px rgba(23,105,210,.07)}
