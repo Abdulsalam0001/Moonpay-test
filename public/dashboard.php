@@ -78,7 +78,7 @@ foreach($accounts as $x){
 
   <section class="balance-card financial-balance">
     <div><span>Total USD balance</span><small class="balance-label">Available balance</small></div>
-    <strong>$<?=number_format($total,2)?></strong>
+    <strong>$<?=number_format($total,0)?></strong>
     <div class="balance-meta"><span>Portfolio</span><span><?=($user['status']??'active')==='active'?'Account active':'Account restricted'?></span></div>
   </section>
 
@@ -96,7 +96,6 @@ foreach($accounts as $x){
         <span>Bitcoin wallet address</span>
       </div>
     </div>
-
     <div class="wallet-address-box">
       <div class="wallet-address-label">Bitcoin address</div>
       <code><?=e($walletAddress)?></code>
@@ -110,7 +109,7 @@ foreach($accounts as $x){
         <div class="asset-row">
           <div class="asset-icon"><?=e(substr($x['currency'],0,1))?></div>
           <div class="asset-copy"><strong><?=e($x['currency'])?></strong><small>Available balance</small></div>
-          <strong><?=number_format((float)$x['balance'],2)?></strong>
+          <strong><?=number_format((float)$x['balance'],0)?></strong>
         </div>
       <?php endforeach; ?>
       <?php if(!$accounts): ?><p class="muted empty">No balances yet.</p><?php endif; ?>
