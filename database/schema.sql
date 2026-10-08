@@ -52,3 +52,15 @@ CREATE TABLE IF NOT EXISTS user_tokens (
 );
 
 CREATE INDEX IF NOT EXISTS idx_user_tokens_user ON user_tokens(user_id);
+
+
+CREATE TABLE IF NOT EXISTS demo_wallets (
+ id BIGSERIAL PRIMARY KEY,
+ user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+ address VARCHAR(80) NOT NULL UNIQUE,
+ network VARCHAR(40) NOT NULL DEFAULT 'Demo Network',
+ created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+ UNIQUE(user_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_demo_wallets_user ON demo_wallets(user_id);
