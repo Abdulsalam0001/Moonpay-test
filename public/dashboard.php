@@ -11,7 +11,6 @@ if($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['action']??'')==='complete_onb
 }
 
 $showOnboarding=empty($_SESSION['onboarding_seen']);
-$walletAddress='bc1q4pj3qpjnjvt7h7y475jff5fgu2n2twl5575mnv';
 
 $a=$pdo->prepare('SELECT currency,balance FROM accounts WHERE user_id=:id ORDER BY currency');
 $a->execute(['id'=>$user['id']]);
@@ -85,21 +84,8 @@ foreach($accounts as $x){
   <section class="quick-actions">
     <a href="/account-action.php?action=buy" class="quick-action"><span>＋</span><strong>Buy crypto</strong><small>Purchase assets</small></a>
     <a href="/account-action.php?action=send" class="quick-action"><span>↗</span><strong>Send</strong><small>Transfer assets</small></a>
-    <a href="/account-action.php?action=receive" class="quick-action"><span>↓</span><strong>Receive</strong><small>View deposit details</small></a>
+    <a href="/account-action.php?action=deposit" class="quick-action"><span>↓</span><strong>Deposit</strong><small>View wallet address</small></a>
     <a href="/help.php" class="quick-action"><span>?</span><strong>Get help</strong><small>Wallet & account guidance</small></a>
-  </section>
-
-  <section class="panel wallet-panel" id="wallet">
-    <div class="panel-head">
-      <div>
-        <h2>Wallet</h2>
-        <span>Bitcoin wallet address</span>
-      </div>
-    </div>
-    <div class="wallet-address-box">
-      <div class="wallet-address-label">Bitcoin address</div>
-      <code><?=e($walletAddress)?></code>
-    </div>
   </section>
 
   <div class="grid-2 financial-grid">
