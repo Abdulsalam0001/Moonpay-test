@@ -25,15 +25,19 @@ $restricted=($user['status']??'active')!=='active';
 <body>
 <header class="topbar">
   <a class="brand" href="/dashboard.php"><span class="brand-mark">M</span><span>moonpay</span></a>
-  <nav><a href="/dashboard.php">Overview</a><a href="/help.php">Help</a><?php if(($user['role']??'')==='admin' && empty($user['demo'])):?><a href="/admin.php">Admin</a><?php endif;?><a href="/logout.php">Log out</a></nav>
+  <nav><a href="/dashboard.php">Overview</a><a href="/help.php">Help</a><?php if(($user['role']??'')==='admin'):?><a href="/admin.php">Admin</a><?php endif;?><a href="/logout.php">Log out</a></nav>
 </header>
 <main class="shell action-shell">
   <?php if($restricted): ?>
     <section class="action-restricted">
       <div class="restricted-icon">!</div>
       <p class="eyebrow">Account restricted</p>
-      <h1>This account is restricted.</h1>
-      <p class="muted">You cannot <?=e(strtolower($title))?> or perform account transactions while your account is suspended.</p>
+      <h1>Account currently restricted due to inactivity.</h1>
+      <p class="muted">Your account is currently restricted, so <?=e(strtolower($title))?> and other account functions are unavailable.</p>
+      <div class="action-restricted-copy">
+        <strong>Activate account to resume functions</strong>
+        <span>Contact support to review and reactivate the account. Activation is controlled by the account administrator.</span>
+      </div>
       <a class="button button-dark" href="/help.php">Get help</a>
     </section>
   <?php else: ?>
