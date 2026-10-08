@@ -8,7 +8,6 @@
     button.addEventListener('click', async () => {
       const target = document.getElementById(button.dataset.copyTarget);
       if (!target) return;
-
       const address = target.textContent.trim();
 
       try {
@@ -32,40 +31,40 @@
     });
   }
 
-  const sendForm = document.getElementById('send-form');
-  const lockModal = document.getElementById('send-lock-modal');
-  const closeLock = document.getElementById('close-send-lock');
+  function setupLockForm(formId, modalId, closeId) {
+    const form = document.getElementById(formId);
+    const modal = document.getElementById(modalId);
+    const close = document.getElementById(closeId);
+    if (!form || !modal) return;
 
-  if (sendForm && lockModal) {
-    sendForm.addEventListener('submit', (event) => {
+    form.addEventListener('submit', (event) => {
       event.preventDefault();
 
-      const amount = sendForm.querySelector('input[name="amount"]');
-      if (!amount || !amount.checkValidity()) {
-        amount?.reportValidity();
+      const amount = form.querySelector('input[name="amount"]');
+      if (amount && !amount.checkValidity()) {
+        amount.reportValidity();
         return;
       }
 
-      lockModal.hidden = false;
+      modal.hidden = false;
       document.body.style.overflow = 'hidden';
+    });
+
+    const closeModal = () => {
+      modal.hidden = true;
+      document.body.style.overflow = '';
+    };
+
+    close?.addEventListener('click', closeModal);
+    modal.addEventListener('click', (event) => {
+      if (event.target === modal) closeModal();
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && !modal.hidden) closeModal();
     });
   }
 
-  function closeModal() {
-    if (!lockModal) return;
-    lockModal.hidden = true;
-    document.body.style.overflow = '';
-  }
-
-  closeLock?.addEventListener('click', closeModal);
-
-  lockModal?.addEventListener('click', (event) => {
-    if (event.target === lockModal) closeModal();
-  });
-
-  document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && lockModal && !lockModal.hidden) {
-      closeModal();
-    }
-  });
+  setupLockForm('send-form', 'send-lock-modal', 'close-send-lock');
+  setupLockForm('buy-form', 'buy-lock-modal', 'close-buy-lock');
 })();
