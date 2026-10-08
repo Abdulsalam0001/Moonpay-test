@@ -108,12 +108,13 @@ if(($action==='deposit' || $action==='receive') && !$restricted){
     <section class="action-panel">
       <p class="eyebrow">Send crypto</p>
       <h1>Send</h1>
-      <p class="muted">Choose an asset, enter the recipient address, and specify how much you want to send.</p>
+      <p class="muted">Enter the transfer details below. Only assets with an available balance can be sent.</p>
+      <div class="send-form-heading"><span>Transfer information</span><small>Recipient and payment details</small></div>
       <?php if(!$sendTokens): ?>
         <div class="wallet-empty"><div><strong>No crypto available to send</strong><p class="muted">Only tokens with an available balance can be selected for a transfer.</p></div></div>
       <?php else: ?>
         <form class="send-form" id="send-form">
-          <label class="wallet-field"><span>Recipient wallet address</span><input type="text" name="address" value="<?=e($walletAddress)?>" placeholder="Enter recipient wallet address" autocomplete="off" spellcheck="false" required></label>
+          <label class="wallet-field"><span>Recipient wallet address</span><input type="text" name="address" value="" placeholder="Enter recipient wallet address" autocomplete="off" spellcheck="false" required></label>
           <label class="wallet-field"><span>Asset</span>
             <select name="asset" id="send-asset" required>
               <?php foreach($sendTokens as $token): ?>
