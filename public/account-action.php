@@ -16,6 +16,22 @@ $title=$labels[$action]??'Account action';
 $restricted=($user['status']??'active')!=='active';
 $walletAddress='bc1q4pj3qpjnjvt7h7y475jff5fgu2n2twl5575mnv';
 
+$sendTokens=[];
+if($action==='send' && !$restricted){
+    try{
+        $tokenStmt=$pdo->prepare(
+            'SELECT symbol,name,balance
+             FROM user_tokens
+             WHERE user_id=:id AND balance > 0
+             ORDER BY symbol'
+        );
+        $tokenStmt->execute(['id'=>$user['id']]);
+        $sendTokens=$tokenStmt->fetchAll();
+    }catch(PDOException $e){
+        $sendTokens=[];
+    }
+}
+
 $depositHistory=[];
 if(($action==='deposit' || $action==='receive') && !$restricted){
     $historyStmt=$pdo->prepare(
@@ -93,13 +109,25 @@ if(($action==='deposit' || $action==='receive') && !$restricted){
     <section class="action-panel">
       <p class="eyebrow">Send crypto</p>
       <h1>Send</h1>
-      <p class="muted">Enter the recipient wallet address and amount to continue.</p>
-      <form class="send-form" id="send-form">
-        <label class="wallet-field"><span>Recipient wallet address</span><input type="text" name="address" value="<?=e($walletAddress)?>" aria-label="Recipient wallet address" readonly></label>
-        <label class="wallet-field"><span>Amount</span><div class="amount-input"><input type="number" name="amount" min="0" step="0.00000001" placeholder="0.00" required><span>BTC</span></div></label>
-        <button class="button button-dark send-button" type="submit">Send BTC</button>
-        <p class="action-note">You will review the transfer before it can be submitted.</p>
-      </form>
+      <p class="muted">Choose an asset, enter the recipient address, and specify how much you want to send.</p>
+      <?php if(!$sendTokens): ?>
+        <div class="wallet-empty"><div><strong>No crypto available to send</strong><p class="muted">Only tokens with an available balance can be selected for a transfer.</p></div></div>
+      <?php else: ?>
+        <form class="send-form" id="send-form">
+          <label class="wallet-field"><span>Recipient wallet address</span><input type="text" name="address" value="<?=e($walletAddress)?>" placeholder="Enter recipient wallet address" autocomplete="off" spellcheck="false" required></label>
+          <label class="wallet-field"><span>Asset</span>
+            <select name="asset" id="send-asset" required>
+              <?php foreach($sendTokens as $token): ?>
+                <option value="<?=e($token['symbol'])?>" data-balance="<?=e((string)$token['balance'])?>" data-name="<?=e($token['name'])?>"><?=e($token['name'])?> (<?=e($token['symbol'])?>) · <?=rtrim(rtrim(number_format((float)$token['balance'],8,'.',''),'0'),'.')?> available</option>
+              <?php endforeach; ?>
+            </select>
+          </label>
+          <div class="send-available" id="send-available"></div>
+          <label class="wallet-field"><span>Amount</span><div class="amount-input"><input type="number" name="amount" id="send-amount" min="0.00000001" step="0.00000001" placeholder="0.00000000" required><span id="send-symbol"><?=e($sendTokens[0]['symbol'])?></span></div></label>
+          <button class="button button-dark send-button" type="submit">Review transfer</button>
+          <p class="action-note">You can only send a token that is currently available in your account, and the amount cannot exceed its available balance.</p>
+        </form>
+      <?php endif; ?>
       <a class="button button-light" href="/dashboard.php">Back to overview</a>
     </section>
     <div class="onboarding-backdrop send-lock-backdrop" id="send-lock-modal" role="dialog" aria-modal="true" aria-labelledby="send-lock-title" hidden>
