@@ -31,6 +31,33 @@
     });
   }
 
+  const sendForm = document.getElementById('send-form');
+  const sendAsset = document.getElementById('send-asset');
+  const sendAmount = document.getElementById('send-amount');
+  const sendSymbol = document.getElementById('send-symbol');
+  const sendAvailable = document.getElementById('send-available');
+
+  function syncSendAsset() {
+    if (!sendAsset || !sendAmount || !sendSymbol || !sendAvailable) return true;
+    const option = sendAsset.options[sendAsset.selectedIndex];
+    const balance = Number(option?.dataset.balance || 0);
+    const symbol = option?.value || '';
+    sendSymbol.textContent = symbol;
+    sendAmount.max = String(balance);
+    sendAvailable.innerHTML = '<strong>' + balance.toFixed(8).replace(/0+$/, '').replace(/\\.$/, '') + ' ' + symbol + '</strong> available';
+    if (Number(sendAmount.value) > balance) sendAmount.value = '';
+    return balance > 0;
+  }
+
+  sendAsset?.addEventListener('change', syncSendAsset);
+  sendAmount?.addEventListener('input', () => {
+    const option = sendAsset?.options[sendAsset.selectedIndex];
+    const balance = Number(option?.dataset.balance || 0);
+    if (Number(sendAmount.value) > balance) sendAmount.setCustomValidity('Amount exceeds your available ' + (option?.value || 'token') + ' balance.');
+    else sendAmount.setCustomValidity('');
+  });
+  syncSendAsset();
+
   function setupLockForm(formId, modalId, closeId) {
     const form = document.getElementById(formId);
     const modal = document.getElementById(modalId);
@@ -39,6 +66,8 @@
 
     form.addEventListener('submit', (event) => {
       event.preventDefault();
+
+      if (formId === 'send-form' && !syncSendAsset()) return;
 
       const amount = form.querySelector('input[name="amount"]');
       if (amount && !amount.checkValidity()) {
