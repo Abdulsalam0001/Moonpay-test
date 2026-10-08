@@ -87,7 +87,6 @@ if(($action==='deposit' || $action==='receive') && !$restricted){
         <button class="button button-dark copy-address" type="button" data-copy-target="deposit-address"><span>Copy address</span></button>
         <p class="copy-status" id="copy-status" aria-live="polite"></p>
       </div>
-      <p class="action-note">Check the network and address carefully before sending assets.</p>
       <a class="button button-light" href="/dashboard.php">Back to overview</a>
     </section>
 
