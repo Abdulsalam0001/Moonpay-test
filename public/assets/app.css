@@ -21,3 +21,6 @@
 @media(max-width:720px){.quick-actions{grid-template-columns:1fr 1fr}.help-grid{grid-template-columns:1fr}.wallet-empty{align-items:stretch;flex-direction:column}.wallet-empty .button{width:100%}.action-restricted,.action-panel{padding:25px 20px}.button-light{margin-left:0;margin-top:10px;width:100%;justify-content:center}.deposit-address-card{padding:17px}.deposit-address-card code{font-size:12px}.transaction-row{align-items:flex-start}.transaction-row>strong{white-space:nowrap}.amount-input input{font-size:16px}}
 
 .send-available{margin:-2px 0 8px;padding:10px 12px;border-radius:11px;background:#f7f7f4;color:var(--muted);font-size:11px}.send-available strong{color:var(--text);font-weight:750}.send-form select{width:100%;padding:14px 15px;border:1px solid #d8d8d4;border-radius:12px;background:#fff;outline:none}.send-form select:focus{border-color:#1769d2;box-shadow:0 0 0 3px rgba(23,105,210,.12)}
+
+.send-form-heading{display:flex;justify-content:space-between;align-items:end;gap:16px;margin:26px 0 4px;padding-bottom:13px;border-bottom:1px solid var(--line)}.send-form-heading span{font-size:14px;font-weight:750}.send-form-heading small{font-size:11px;color:var(--muted)}
+@media(max-width:720px){.send-form-heading{align-items:flex-start;flex-direction:column;gap:4px}}
