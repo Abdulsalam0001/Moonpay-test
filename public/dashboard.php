@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__.'/../src/bootstrap.php';
 $user=require_auth();
+$pdo=Database::connection();
 
 if($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['action']??'')==='complete_onboarding'){
     verify_csrf($_POST['csrf_token']??null);
@@ -9,61 +10,194 @@ if($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['action']??'')==='complete_onb
     exit;
 }
 
+if($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['action']??'')==='generate_wallet'){
+    verify_csrf($_POST['csrf_token']??null);
+
+    if(($user['status']??'active')!=='active'){
+        http_response_code(403);
+        exit('Account restricted.');
+    }
+
+    try{
+        $address='demo_'.bin2hex(random_bytes(24));
+        $walletStmt=$pdo->prepare(
+            'INSERT INTO demo_wallets(user_id,address,network)
+             VALUES(:user_id,:address,\'Demo Network\')'
+        );
+        $walletStmt->execute([
+            'user_id'=>$user['id'],
+            'address'=>$address
+        ]);
+    }catch(PDOException $e){
+        // A wallet already exists for this account; keep the existing address.
+    }
+
+    header('Location: /dashboard.php#wallet');
+    exit;
+}
+
 $showOnboarding=empty($_SESSION['onboarding_seen']);
 
-if(!empty($user['demo'])){
-    $accounts=[
-        ['currency'=>'USD','balance'=>125000.00],
-        ['currency'=>'EUR','balance'=>18400.50],
-        ['currency'=>'GBP','balance'=>9200.00],
-        ['currency'=>'NGN','balance'=>2850000.00],
-    ];
-    $transactions=[
-        ['type'=>'deposit','description'=>'Demo account funding','amount'=>25000,'currency'=>'USD','status'=>'completed','created_at'=>date('Y-m-d H:i:s',strtotime('-2 hours'))],
-        ['type'=>'purchase','description'=>'Crypto purchase','amount'=>4200,'currency'=>'USD','status'=>'completed','created_at'=>date('Y-m-d H:i:s',strtotime('-1 day'))],
-        ['type'=>'withdrawal','description'=>'Bank withdrawal','amount'=>1800,'currency'=>'USD','status'=>'completed','created_at'=>date('Y-m-d H:i:s',strtotime('-3 days'))],
-    ];
-}else{
-    $pdo=Database::connection();
-    $a=$pdo->prepare('SELECT currency,balance FROM accounts WHERE user_id=:id ORDER BY currency');$a->execute(['id'=>$user['id']]);$accounts=$a->fetchAll();
-    $t=$pdo->prepare('SELECT type,description,amount,currency,status,created_at FROM transactions WHERE user_id=:id ORDER BY created_at DESC LIMIT 8');$t->execute(['id'=>$user['id']]);$transactions=$t->fetchAll();
-}
+$a=$pdo->prepare('SELECT currency,balance FROM accounts WHERE user_id=:id ORDER BY currency');
+$a->execute(['id'=>$user['id']]);
+$accounts=$a->fetchAll();
+
+$t=$pdo->prepare(
+    'SELECT type,description,amount,currency,status,created_at
+     FROM transactions
+     WHERE user_id=:id
+     ORDER BY created_at DESC
+     LIMIT 8'
+);
+$t->execute(['id'=>$user['id']]);
+$transactions=$t->fetchAll();
+
 $tokens=[];
-if(empty($user['demo'])){
-    try{
-        $tokenStmt=Database::connection()->prepare('SELECT symbol,name,balance FROM user_tokens WHERE user_id=:id ORDER BY symbol');
-        $tokenStmt->execute(['id'=>$user['id']]);
-        $tokens=$tokenStmt->fetchAll();
-    }catch(PDOException $e){
-        // Token balances are optional until the latest schema has been applied.
-        $tokens=[];
+try{
+    $tokenStmt=$pdo->prepare(
+        'SELECT symbol,name,balance
+         FROM user_tokens
+         WHERE user_id=:id
+         ORDER BY symbol'
+    );
+    $tokenStmt->execute(['id'=>$user['id']]);
+    $tokens=$tokenStmt->fetchAll();
+}catch(PDOException $e){
+    $tokens=[];
+}
+
+$walletStmt=$pdo->prepare(
+    'SELECT address,network,created_at
+     FROM demo_wallets
+     WHERE user_id=:id
+     LIMIT 1'
+);
+$walletStmt->execute(['id'=>$user['id']]);
+$wallet=$walletStmt->fetch();
+
+$total=0;
+foreach($accounts as $x){
+    if($x['currency']==='USD'){
+        $total+=(float)$x['balance'];
     }
 }
-$total=0;foreach($accounts as $x)if($x['currency']==='USD')$total+=(float)$x['balance'];
 ?>
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Overview · MoonPay</title><link rel="stylesheet" href="/assets/app.css"></head>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Overview · MoonPay</title>
+<link rel="stylesheet" href="/assets/app.css">
+</head>
 <body>
 <header class="topbar">
   <a class="brand" href="/dashboard.php"><span class="brand-mark">M</span><span>moonpay</span></a>
-  <nav><a class="nav-active" href="/dashboard.php">Overview</a><a href="/help.php">Help</a><?php if(($user['role']??'')==='admin' && empty($user['demo'])):?><a href="/admin.php">Admin</a><?php endif;?><a href="/logout.php">Log out</a></nav>
+  <nav>
+    <a class="nav-active" href="/dashboard.php">Overview</a>
+    <a href="/help.php">Help</a>
+    <?php if(($user['role']??'')==='admin'):?><a href="/admin.php">Admin</a><?php endif;?>
+    <a href="/logout.php">Log out</a>
+  </nav>
 </header>
+
 <main class="shell financial-shell">
-  <div class="hero-row"><div><p class="eyebrow">Overview</p><h1>Good to see you, <?=e($user['name'])?>.</h1><p class="muted">Here is your account overview and recent financial activity.</p></div></div>
-  <?php if(!empty($user['demo'])):?><div class="demo-notice"><div><strong>Demo environment</strong><span>This account is simulated and does not connect to a live blockchain.</span></div><span class="restriction-pill">Mainnet access restricted</span></div><?php endif;?>
-  <section class="balance-card financial-balance"><div><span>Total USD balance</span><small class="balance-label">Available balance</small></div><strong>$<?=number_format($total,2)?></strong><div class="balance-meta"><span><?=!empty($user['demo'])?'Demo portfolio':'Portfolio'?></span><span><?=!empty($user['demo'])?'No mainnet access':'Account balance'?></span></div></section>
+  <div class="hero-row">
+    <div>
+      <p class="eyebrow">Overview</p>
+      <h1>Good to see you, <?=e($user['name'])?>.</h1>
+      <p class="muted">Here is your account overview and recent financial activity.</p>
+    </div>
+  </div>
+
+  <section class="balance-card financial-balance">
+    <div><span>Total USD balance</span><small class="balance-label">Available balance</small></div>
+    <strong>$<?=number_format($total,2)?></strong>
+    <div class="balance-meta"><span>Portfolio</span><span><?=($user['status']??'active')==='active'?'Account active':'Account restricted'?></span></div>
+  </section>
+
   <section class="quick-actions">
     <a href="/account-action.php?action=buy" class="quick-action"><span>＋</span><strong>Buy crypto</strong><small>Purchase assets</small></a>
     <a href="/account-action.php?action=send" class="quick-action"><span>↗</span><strong>Send</strong><small>Transfer assets</small></a>
     <a href="/account-action.php?action=receive" class="quick-action"><span>↓</span><strong>Receive</strong><small>View deposit details</small></a>
     <a href="/help.php" class="quick-action"><span>?</span><strong>Get help</strong><small>Wallet & account guidance</small></a>
   </section>
-  <?php if(!empty($user['demo'])):?><section class="restricted-card"><div class="restricted-icon">!</div><div><p class="eyebrow">Token access</p><h2>Mainnet access is restricted</h2><p class="muted">The balances shown here are simulated. Mainnet transfers, withdrawals, and blockchain transactions are unavailable.</p></div></section><?php endif;?>
+
+  <section class="panel wallet-panel" id="wallet">
+    <div class="panel-head">
+      <div>
+        <h2>Wallet</h2>
+        <span>Simulated address for this demo</span>
+      </div>
+      <?php if($wallet): ?><span class="wallet-network"><?=e($wallet['network'])?></span><?php endif; ?>
+    </div>
+
+    <?php if($wallet): ?>
+      <div class="wallet-address-box">
+        <div class="wallet-address-label">Demo wallet address</div>
+        <code><?=e($wallet['address'])?></code>
+        <small>This address is generated for demonstration only. It is not a live blockchain wallet and has no private key attached to it.</small>
+      </div>
+    <?php elseif(($user['status']??'active')==='active'): ?>
+      <div class="wallet-empty">
+        <div>
+          <strong>No demo wallet generated yet.</strong>
+          <p class="muted">Generate a safe placeholder address you can use while testing the interface.</p>
+        </div>
+        <form method="post">
+          <input type="hidden" name="action" value="generate_wallet">
+          <input type="hidden" name="csrf_token" value="<?=e(csrf_token())?>">
+          <button class="button button-dark" type="submit">Generate wallet address</button>
+        </form>
+      </div>
+    <?php else: ?>
+      <div class="wallet-empty">
+        <div>
+          <strong>Wallet generation is restricted.</strong>
+          <p class="muted">Activate the account before creating additional account features.</p>
+        </div>
+      </div>
+    <?php endif; ?>
+  </section>
+
   <div class="grid-2 financial-grid">
-    <section class="panel"><div class="panel-head"><h2>Accounts</h2><span><?=count($accounts)?> currencies</span></div><?php foreach($accounts as $x):?><div class="asset-row"><div class="asset-icon"><?=e(substr($x['currency'],0,1))?></div><div class="asset-copy"><strong><?=e($x['currency'])?></strong><small>Available balance</small></div><strong><?=number_format((float)$x['balance'],2)?></strong></div><?php endforeach;?><?php if(!$accounts):?><p class="muted empty">No balances yet.</p><?php endif;?></section>
-    <section class="panel"><div class="panel-head"><h2>Recent activity</h2><span>Latest</span></div><?php foreach($transactions as $x):?><div class="transaction-row"><div><strong><?=e($x['description'])?></strong><small><?=e(ucfirst($x['status']))?> · <?=e(date('M j, Y',strtotime($x['created_at'])))?></small></div><strong class="<?=$x['type']==='withdrawal'?'negative':'positive'?>"><?=$x['type']==='withdrawal'?'-':'+'?><?=e($x['currency'])?> <?=number_format((float)$x['amount'],2)?></strong></div><?php endforeach;?><?php if(!$transactions):?><p class="muted empty">No transactions yet.</p><?php endif;?></section>
+    <section class="panel">
+      <div class="panel-head"><h2>Accounts</h2><span><?=count($accounts)?> currencies</span></div>
+      <?php foreach($accounts as $x): ?>
+        <div class="asset-row">
+          <div class="asset-icon"><?=e(substr($x['currency'],0,1))?></div>
+          <div class="asset-copy"><strong><?=e($x['currency'])?></strong><small>Available balance</small></div>
+          <strong><?=number_format((float)$x['balance'],2)?></strong>
+        </div>
+      <?php endforeach; ?>
+      <?php if(!$accounts): ?><p class="muted empty">No balances yet.</p><?php endif; ?>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><h2>Recent activity</h2><span>Latest</span></div>
+      <?php foreach($transactions as $x): ?>
+        <div class="transaction-row">
+          <div><strong><?=e($x['description'])?></strong><small><?=e(ucfirst($x['status']))?> · <?=e(date('M j, Y',strtotime($x['created_at'])))?></small></div>
+          <strong class="<?=$x['type']==='withdrawal'?'negative':'positive'?>"><?=$x['type']==='withdrawal'?'-':'+'?><?=e($x['currency'])?> <?=number_format((float)$x['amount'],2)?></strong>
+        </div>
+      <?php endforeach; ?>
+      <?php if(!$transactions): ?><p class="muted empty">No transactions yet.</p><?php endif; ?>
+    </section>
   </div>
-  <section class="panel" style="margin-top:22px"><div class="panel-head"><h2>Tokens</h2><span><?=count($tokens)?> assets</span></div><?php foreach($tokens as $token):?><div class="asset-row"><div class="asset-icon"><?=e(substr($token['symbol'],0,1))?></div><div class="asset-copy"><strong><?=e($token['symbol'])?></strong><small><?=e($token['name'])?></small></div><strong><?=rtrim(rtrim(number_format((float)$token['balance'],8,'.',''),'0'),'.')?></strong></div><?php endforeach;?><?php if(!$tokens):?><p class="muted empty">No token balances yet.</p><?php endif;?></section>
+
+  <section class="panel" style="margin-top:22px">
+    <div class="panel-head"><h2>Tokens</h2><span><?=count($tokens)?> assets</span></div>
+    <?php foreach($tokens as $token): ?>
+      <div class="asset-row">
+        <div class="asset-icon"><?=e(substr($token['symbol'],0,1))?></div>
+        <div class="asset-copy"><strong><?=e($token['symbol'])?></strong><small><?=e($token['name'])?></small></div>
+        <strong><?=rtrim(rtrim(number_format((float)$token['balance'],8,'.',''),'0'),'.')?></strong>
+      </div>
+    <?php endforeach; ?>
+    <?php if(!$tokens): ?><p class="muted empty">No token balances yet.</p><?php endif; ?>
+  </section>
 </main>
+
 <?php if($showOnboarding): ?>
 <div class="onboarding-backdrop" id="security-onboarding" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
   <section class="onboarding-modal">
@@ -75,9 +209,18 @@ $total=0;foreach($accounts as $x)if($x['currency']==='USD')$total+=(float)$x['ba
       <article class="onboarding-slide" data-slide="3"><div class="onboarding-icon">✓</div><p class="eyebrow">Stay protected</p><h2>You are in control</h2><p>Review wallet addresses and networks before sending assets, and treat unexpected recovery or payment requests with caution.</p></article>
     </div>
     <div class="onboarding-dots"><span class="is-active"></span><span></span><span></span><span></span></div>
-    <div class="onboarding-actions"><button class="button button-dark" type="button" id="onboarding-next">Continue</button><form method="post" id="onboarding-complete"><input type="hidden" name="action" value="complete_onboarding"><input type="hidden" name="csrf_token" value="<?=e(csrf_token())?>"><button class="button button-dark" type="submit">Got it — Continue to dashboard</button></form><button class="onboarding-skip" type="submit" form="onboarding-complete">Skip for now</button></div>
+    <div class="onboarding-actions">
+      <button class="button button-dark" type="button" id="onboarding-next">Continue</button>
+      <form method="post" id="onboarding-complete">
+        <input type="hidden" name="action" value="complete_onboarding">
+        <input type="hidden" name="csrf_token" value="<?=e(csrf_token())?>">
+        <button class="button button-dark" type="submit">Got it — Continue to dashboard</button>
+      </form>
+      <button class="onboarding-skip" type="submit" form="onboarding-complete">Skip for now</button>
+    </div>
   </section>
 </div>
 <script src="/assets/dashboard.js" defer></script>
 <?php endif; ?>
-</body></html>
+</body>
+</html>
