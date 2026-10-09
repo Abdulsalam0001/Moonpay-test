@@ -6,7 +6,8 @@
   const status = document.getElementById('balance-price-status');
   if (!balance || !status) return;
 
-  const holding = Number(balance.dataset.btcHolding || 0);
+  let holding = Number(balance.dataset.btcHolding || 0);
+  const fallbackUsd = Number(balance.dataset.fallbackUsd || 0);
   let socket;
   let reconnectTimer;
   let stopped = false;
@@ -21,12 +22,19 @@
   function setStatus(text, live = false) {
     status.textContent = text;
     status.classList.toggle('is-live', live);
+    const dot = document.querySelector('.live-price-dot');
+    if (dot) dot.classList.toggle('is-live', live);
   }
 
   function applyPrice(price) {
     if (!Number.isFinite(price) || price <= 0) return;
+    if (holding <= 0 && fallbackUsd > 0) {
+      // If the server-side quote was unavailable, establish a temporary fixed BTC equivalent from the displayed starting value.
+      holding = fallbackUsd / price;
+    }
     if (holding > 0) {
       balance.textContent = money(holding * price);
+      balance.dataset.btcHolding = String(holding);
       if (btcEquivalent) {
         btcEquivalent.textContent = holding.toLocaleString('en-US', {
           minimumFractionDigits: 0,
