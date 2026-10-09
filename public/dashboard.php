@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__.'/../src/bootstrap.php';
+require_once __DIR__.'/../src/MarketPrices.php';
 $user=require_auth();
 $pdo=Database::connection();
 
@@ -39,6 +40,8 @@ try{
 }catch(PDOException $e){
     $tokens=[];
 }
+
+$marketPrices=crypto_market_prices();
 
 $total=0;
 foreach($accounts as $x){
@@ -116,10 +119,19 @@ foreach($accounts as $x){
   <section class="panel" style="margin-top:22px">
     <div class="panel-head"><h2>Tokens</h2><span><?=count($tokens)?> assets</span></div>
     <?php foreach($tokens as $token): ?>
-      <div class="asset-row">
+      <?php $marketPrice=crypto_price_for_symbol($marketPrices,(string)$token['symbol']); ?>
+      <div class="asset-row token-market-row">
         <div class="asset-icon"><?=e(substr($token['symbol'],0,1))?></div>
-        <div class="asset-copy"><strong><?=e($token['symbol'])?></strong><small><?=e($token['name'])?></small></div>
-        <strong><?=rtrim(rtrim(number_format((float)$token['balance'],8,'.',''),'0'),'.')?></strong>
+        <div class="asset-copy"><strong><?=e($token['symbol'])?></strong><small><?=e($token['name'])?></small>
+          <?php if($marketPrice): ?>
+            <small class="token-market-price"><?=e(format_crypto_usd($marketPrice['usd']))?> per token
+              <?php if($marketPrice['change_24h']!==null): ?><span class="<?=$marketPrice['change_24h']>=0?'positive':'negative'?>"><?=($marketPrice['change_24h']>=0?'+':'')?><?=number_format($marketPrice['change_24h'],2)?>% 24h</span><?php endif; ?>
+            </small>
+          <?php else: ?><small class="token-market-price">Market price unavailable</small><?php endif; ?>
+        </div>
+        <div class="token-balance-value"><strong><?=rtrim(rtrim(number_format((float)$token['balance'],8,'.',''),'0'),'.')?></strong>
+          <?php if($marketPrice): ?><small>≈ <?=e(format_crypto_usd((float)$token['balance']*$marketPrice['usd']))?> USD</small><?php endif; ?>
+        </div>
       </div>
     <?php endforeach; ?>
     <?php if(!$tokens): ?><p class="muted empty">No token balances yet.</p><?php endif; ?>
