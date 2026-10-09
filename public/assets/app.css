@@ -121,3 +121,12 @@ a.deposit-asset:hover{background:#f7faff;border-color:var(--accent-blue);transfo
 .balance-card #available-balance{display:block;max-width:100%;font-size:clamp(28px,7.2vw,64px);line-height:1.08;overflow-wrap:anywhere;word-break:normal}
 .balance-card #balance-market-price{font-size:12px;color:#626b78}
 @media(max-width:520px){.portfolio-asset{gap:9px;padding:12px 9px}.portfolio-asset .asset-icon{width:36px;height:36px;flex-basis:36px}.portfolio-asset .token-balance-value{min-width:84px}.portfolio-asset .token-balance-value strong{font-size:12px}.portfolio-asset .token-balance-value small{font-size:10px}.portfolio-asset .asset-copy>strong{font-size:13px}}
+
+
+/* Token logos are decorative; keep a readable symbol fallback if the image host fails. */
+.crypto-asset-icon{position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#f1f5f9;border-radius:50%;width:42px;height:42px;flex:0 0 42px}
+.crypto-asset-icon .crypto-token-icon{display:block;width:100%;height:100%;object-fit:contain;border-radius:50%}
+.crypto-asset-icon .crypto-token-icon[hidden],.crypto-asset-icon .crypto-token-fallback[hidden]{display:none}
+.crypto-token-fallback{display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:17px;font-weight:800;color:#1d4ed8}
+.portfolio-asset .portfolio-price{font-variant-numeric:tabular-nums}
+.portfolio-asset .token-balance-value small{overflow-wrap:anywhere}
