@@ -49,6 +49,37 @@ foreach($accounts as $x){
         $total+=(float)$x['balance'];
     }
 }
+
+// Persist a one-time BTC holding based on the user's current USD balance.
+// Subsequent market updates change only the displayed USD valuation, not the BTC amount.
+$btcPrice=crypto_price_for_symbol($marketPrices,'BTC');
+if($btcPrice && $btcPrice['usd']>0){
+    $seedBtc=$pdo->prepare(
+        'INSERT INTO user_tokens(user_id,symbol,name,balance)
+         VALUES(:user_id,\'BTC\',\'Bitcoin\',:balance)
+         ON CONFLICT(user_id,symbol) DO NOTHING'
+    );
+    $seedBtc->execute([
+        'user_id'=>$user['id'],
+        'balance'=>number_format($total/$btcPrice['usd'],8,'.','')
+    ]);
+}
+
+$btcStmt=$pdo->prepare("SELECT balance FROM user_tokens WHERE user_id=:id AND UPPER(symbol)='BTC' LIMIT 1");
+$btcStmt->execute(['id'=>$user['id']]);
+$btcHolding=(float)($btcStmt->fetchColumn() ?: 0);
+
+// Re-read tokens so a first-visit BTC holding appears in the portfolio list.
+try{
+    $tokenStmt=$pdo->prepare('SELECT symbol,name,balance FROM user_tokens WHERE user_id=:id ORDER BY symbol');
+    $tokenStmt->execute(['id'=>$user['id']]);
+    $tokens=$tokenStmt->fetchAll();
+}catch(PDOException $e){
+    $tokens=[];
+}
+$availableBalance=($btcPrice && $btcHolding>0)
+    ? $btcHolding*(float)$btcPrice['usd']
+    : $total;
 ?>
 <!doctype html>
 <html lang="en">
@@ -79,9 +110,9 @@ foreach($accounts as $x){
   </div>
 
   <section class="balance-card financial-balance">
-    <div><span>Total USD balance</span><small class="balance-label">Available balance</small></div>
-    <strong>$<?=number_format($total,0)?></strong>
-    <div class="balance-meta"><span>Portfolio</span><span><?=($user['status']??'active')==='active'?'Account active':'Account restricted'?></span></div>
+    <div><span>Bitcoin portfolio value</span><small class="balance-label">Available balance · BTC-backed</small></div>
+    <strong id="available-balance" data-btc-holding="<?=e(rtrim(rtrim(number_format($btcHolding,8,'.',''),'0'),'.'))?>" data-fallback-usd="<?=e((string)$total)?>">$<?=number_format($availableBalance,2)?></strong>
+    <div class="balance-meta"><span id="balance-btc-equivalent"><?=number_format($btcHolding,8)?> BTC</span><span><span class="live-price-dot" aria-hidden="true"></span> <span id="balance-price-status">Connecting to live price</span></span></div>
   </section>
 
   <section class="quick-actions">
@@ -137,6 +168,7 @@ foreach($accounts as $x){
     <?php if(!$tokens): ?><p class="muted empty">No token balances yet.</p><?php endif; ?>
   </section>
 </main>
+<script src="/assets/live-balance.js" defer></script>
 
 <?php if($showOnboarding): ?>
 <div class="onboarding-backdrop" id="security-onboarding" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
