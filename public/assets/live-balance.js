@@ -30,6 +30,18 @@
 
   const keyFor = symbol => String(symbol || '').toLowerCase().replace(/[^a-z0-9]+/g, '-');
 
+  // Show real token logos when available; gracefully fall back to a symbol initial.
+  document.querySelectorAll('.crypto-asset-icon').forEach(icon => {
+    const img = icon.querySelector('.crypto-token-icon');
+    const fallback = icon.querySelector('.crypto-token-fallback');
+    if (!img || !fallback) return;
+    const showFallback = () => { img.hidden = true; fallback.hidden = false; };
+    img.addEventListener('error', showFallback, { once: true });
+    img.addEventListener('load', () => { img.hidden = false; fallback.hidden = true; }, { once: true });
+    if (img.complete && img.naturalWidth === 0) showFallback();
+    else if (img.complete && img.naturalWidth > 0) fallback.hidden = true;
+  });
+
   function renderPrices(prices) {
     if (!prices || typeof prices !== 'object') return;
 
@@ -40,7 +52,15 @@
 
       document.querySelectorAll('.portfolio-asset').forEach(row => {
         if ((row.dataset.assetSymbol || '').toUpperCase() !== symbol.toUpperCase()) return;
-        const amount = Number(row.dataset.assetAmount || 0);
+        let amount = Number(row.dataset.assetAmount || 0);
+        // If a demo account has a USD balance but no saved BTC amount, estimate
+        // the BTC equivalent from the first usable market quote and keep it fixed.
+        if (symbol.toUpperCase() === 'BTC' && amount <= 0 && fallbackUsd > 0) {
+          amount = fallbackUsd / price;
+          row.dataset.assetAmount = String(amount);
+          const amountEl = row.querySelector('[id^="asset-amount-"]');
+          if (amountEl) amountEl.textContent = amount.toLocaleString('en-US', { maximumFractionDigits: 8 });
+        }
         const priceEl = document.getElementById('asset-price-' + key);
         const valueEl = document.getElementById('asset-value-' + key);
         const changeEl = document.getElementById('asset-change-' + key);
