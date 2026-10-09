@@ -3,93 +3,100 @@
 
   const balance = document.getElementById('available-balance');
   const btcEquivalent = document.getElementById('balance-btc-equivalent');
-  const status = document.getElementById('balance-price-status');
-  if (!balance || !status) return;
+  const btcMarketPrice = document.getElementById('balance-market-price');
+  if (!balance) return;
 
   let holding = Number(balance.dataset.btcHolding || 0);
   const fallbackUsd = Number(balance.dataset.fallbackUsd || 0);
-  let socket;
-  let reconnectTimer;
+  let lastBtcPrice = 0;
   let stopped = false;
+  let refreshTimer;
 
   const money = value => new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
     minimumFractionDigits: 0,
-    maximumFractionDigits: 0
+    maximumFractionDigits: 2
   }).format(value);
 
-  function setStatus(text, live = false) {
-    status.textContent = text;
-    status.classList.toggle('is-live', live);
-    const dot = document.querySelector('.live-price-dot');
-    if (dot) dot.classList.toggle('is-live', live);
-  }
+  const coinPrice = value => {
+    if (!Number.isFinite(value)) return '—';
+    const digits = value >= 1000 ? 2 : value >= 1 ? 2 : value >= 0.01 ? 4 : 6;
+    return '$' + value.toLocaleString('en-US', {
+      minimumFractionDigits: digits,
+      maximumFractionDigits: digits
+    });
+  };
 
-  function applyPrice(price) {
-    if (!Number.isFinite(price) || price <= 0) return;
-    if (holding <= 0 && fallbackUsd > 0) {
-      // If the server-side quote was unavailable, establish a temporary fixed BTC equivalent from the displayed starting value.
-      holding = fallbackUsd / price;
-    }
-    if (holding > 0) {
-      balance.textContent = money(holding * price);
-      balance.dataset.btcHolding = String(holding);
-      if (btcEquivalent) {
-        btcEquivalent.textContent = holding.toLocaleString('en-US', {
-          minimumFractionDigits: 0,
-          maximumFractionDigits: 8
-        }) + ' BTC';
-      }
-      setStatus('Live BTC/USD', true);
-    } else {
-      setStatus('Live price · BTC holding unavailable', true);
-    }
-  }
+  const keyFor = symbol => String(symbol || '').toLowerCase().replace(/[^a-z0-9]+/g, '-');
 
-  function connect() {
-    if (stopped) return;
-    try {
-      socket = new WebSocket('wss://ws.kraken.com/v2');
-      socket.addEventListener('open', () => {
-        socket.send(JSON.stringify({
-          method: 'subscribe',
-          params: { channel: 'ticker', symbol: ['BTC/USD'], event_trigger: 'trades', snapshot: true }
-        }));
-        setStatus('Receiving market feed');
-      });
-      socket.addEventListener('message', event => {
-        try {
-          const message = JSON.parse(event.data);
-          if (message.channel !== 'ticker' || !Array.isArray(message.data)) return;
-          const ticker = message.data.find(item => item.symbol === 'BTC/USD');
-          if (ticker && Number.isFinite(Number(ticker.last))) applyPrice(Number(ticker.last));
-        } catch (_) {
-          // Ignore malformed messages and keep the last valid valuation.
+  function renderPrices(prices) {
+    if (!prices || typeof prices !== 'object') return;
+
+    Object.entries(prices).forEach(([symbol, data]) => {
+      const key = keyFor(symbol);
+      const price = Number(data && data.usd);
+      if (!Number.isFinite(price) || price <= 0) return;
+
+      document.querySelectorAll('.portfolio-asset').forEach(row => {
+        if ((row.dataset.assetSymbol || '').toUpperCase() !== symbol.toUpperCase()) return;
+        const amount = Number(row.dataset.assetAmount || 0);
+        const priceEl = document.getElementById('asset-price-' + key);
+        const valueEl = document.getElementById('asset-value-' + key);
+        const changeEl = document.getElementById('asset-change-' + key);
+        if (priceEl) priceEl.textContent = coinPrice(price) + ' per coin';
+        if (valueEl) valueEl.textContent = '≈ ' + money(amount * price) + ' USD';
+        if (changeEl && data.change_24h !== null && Number.isFinite(Number(data.change_24h))) {
+          const change = Number(data.change_24h);
+          changeEl.innerHTML = '';
+          const span = document.createElement('span');
+          span.className = change >= 0 ? 'positive' : 'negative';
+          span.textContent = (change >= 0 ? '+' : '') + change.toFixed(2) + '% today';
+          changeEl.appendChild(span);
         }
       });
-      socket.addEventListener('error', () => {
-        setStatus('Reconnecting to market feed');
-        try { socket.close(); } catch (_) {}
+
+      if (symbol.toUpperCase() === 'BTC') {
+        lastBtcPrice = price;
+        if (holding <= 0 && fallbackUsd > 0) holding = fallbackUsd / price;
+        if (holding > 0) {
+          balance.textContent = money(holding * price);
+          if (btcEquivalent) {
+            btcEquivalent.textContent = holding.toLocaleString('en-US', {
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 8
+            }) + ' BTC';
+          }
+        }
+        if (btcMarketPrice) btcMarketPrice.textContent = '1 BTC = ' + coinPrice(price);
+      }
+    });
+  }
+
+  async function refreshPrices() {
+    if (stopped) return;
+    try {
+      const response = await fetch('/market-prices.php', {
+        method: 'GET',
+        credentials: 'same-origin',
+        headers: { 'Accept': 'application/json' },
+        cache: 'no-store'
       });
-      socket.addEventListener('close', () => {
-        if (stopped) return;
-        setStatus('Market feed reconnecting');
-        clearTimeout(reconnectTimer);
-        reconnectTimer = setTimeout(connect, 3000);
-      });
+      if (!response.ok) return;
+      const result = await response.json();
+      renderPrices(result.prices);
     } catch (_) {
-      setStatus('Live market feed unavailable');
-      clearTimeout(reconnectTimer);
-      reconnectTimer = setTimeout(connect, 5000);
+      // Keep the last rendered prices; the dashboard does not show a connection error.
+    } finally {
+      if (!stopped) refreshTimer = window.setTimeout(refreshPrices, 30000);
     }
   }
 
+  // Use the server-rendered CoinGecko snapshot immediately, then refresh through our
+  // same-origin PHP endpoint. No browser WebSocket connection is required.
+  refreshPrices();
   window.addEventListener('pagehide', () => {
     stopped = true;
-    clearTimeout(reconnectTimer);
-    if (socket && socket.readyState < WebSocket.CLOSING) socket.close();
+    window.clearTimeout(refreshTimer);
   }, { once: true });
-
-  connect();
 })();
