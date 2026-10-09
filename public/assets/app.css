@@ -46,3 +46,9 @@ a{transition:color .18s ease,background-color .18s ease,border-color .18s ease}
 .address-network{color:var(--accent-blue);background:var(--accent-blue-soft)}
 .copy-address:hover{background:#1257b0}
 .help-card:hover{border-color:var(--accent-blue-border);box-shadow:0 8px 22px rgba(23,105,210,.07)}
+
+/* Ensure available balances remain readable against the blue accent background. */
+.send-available,
+.send-available strong,
+#send-available,
+#send-available strong{color:#1769d2!important}
