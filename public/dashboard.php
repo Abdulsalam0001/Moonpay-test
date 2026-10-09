@@ -50,23 +50,6 @@ foreach($accounts as $x){
     }
 }
 
-// Persist a one-time BTC holding based on the user's current USD balance.
-// Subsequent market updates change only the displayed USD valuation, not the BTC amount.
-$btcPrice=crypto_price_for_symbol($marketPrices,'BTC');
-if($btcPrice && $btcPrice['usd']>0){
-    $seedBtc=$pdo->prepare(
-        'INSERT INTO user_tokens(user_id,symbol,name,balance)
-         VALUES(:user_id,\'BTC\',\'Bitcoin\',:balance)
-         ON CONFLICT(user_id,symbol) DO UPDATE
-         SET balance=EXCLUDED.balance
-         WHERE user_tokens.balance=0'
-    );
-    $seedBtc->execute([
-        'user_id'=>$user['id'],
-        'balance'=>number_format($total/$btcPrice['usd'],8,'.','')
-    ]);
-}
-
 // Make the supported portfolio assets visible from the start without inventing holdings.
 $seedAsset=$pdo->prepare(
     'INSERT INTO user_tokens(user_id,symbol,name,balance)
@@ -99,9 +82,20 @@ try{
 }catch(PDOException $e){
     $tokens=[];
 }
-$availableBalance=($btcPrice && $btcHolding>0)
-    ? $btcHolding*(float)$btcPrice['usd']
-    : $total;
+// Portfolio value is derived only from saved token quantities and current market prices.
+$availableBalance=0.0;
+$hasPricedAssets=false;
+foreach($tokens as $portfolioToken){
+    $portfolioPrice=crypto_price_for_symbol($marketPrices,(string)$portfolioToken['symbol']);
+    if($portfolioPrice && (float)$portfolioPrice['usd']>0){
+        $availableBalance+=(float)$portfolioToken['balance']*(float)$portfolioPrice['usd'];
+        $hasPricedAssets=true;
+    }
+}
+$btcEquivalent=($btcPrice && (float)$btcPrice['usd']>0)
+    ? $availableBalance/(float)$btcPrice['usd']
+    : 0.0;
+$displayAccounts=array_values(array_filter($accounts,static fn($account)=>strtoupper((string)$account['currency'])!=='USD'));
 ?>
 <!doctype html>
 <html lang="en">
@@ -109,7 +103,7 @@ $availableBalance=($btcPrice && $btcHolding>0)
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Overview · MoonPay</title>
-<link rel="stylesheet" href="/assets/app.css?v=20261011">
+<link rel="stylesheet" href="/assets/app.css?v=20261012">
 </head>
 <body>
 <header class="topbar">
@@ -132,9 +126,9 @@ $availableBalance=($btcPrice && $btcHolding>0)
   </div>
 
   <section class="balance-card financial-balance">
-    <div><span>Estimated portfolio value</span><small class="balance-label">BTC holding valued at market price</small></div>
-    <strong id="available-balance" data-btc-holding="<?=e(rtrim(rtrim(number_format($btcHolding,8,'.',''),'0'),'.'))?>" data-fallback-usd="<?=e((string)$total)?>">$<?=number_format($availableBalance,0)?></strong>
-    <div class="balance-meta"><span id="balance-btc-equivalent"><?=number_format($btcHolding,8)?> BTC</span><span id="balance-market-price"><?= $btcPrice ? '1 BTC = '.e(format_crypto_usd((float)$btcPrice['usd'])) : 'Market price refreshing' ?></span></div>
+    <div><span>Estimated portfolio value</span><small class="balance-label">Combined value of your crypto holdings</small></div>
+    <strong id="available-balance" data-btc-holding="<?=e((string)$btcHolding)?>">$<?=number_format($availableBalance,0)?></strong>
+    <div class="balance-meta"><span id="balance-btc-equivalent"><?=number_format($btcEquivalent,8)?> BTC equivalent</span><span id="balance-market-price"><?= $btcPrice ? '1 BTC = '.e(format_crypto_usd((float)$btcPrice['usd'])) : 'Market price refreshing' ?></span></div>
   </section>
 
   <section class="quick-actions">
@@ -146,8 +140,13 @@ $availableBalance=($btcPrice && $btcHolding>0)
 
   <div class="grid-2 financial-grid">
     <section class="panel">
-      <div class="panel-head"><h2>Accounts</h2><span><?=count($accounts)?> currencies</span></div>
-      <?php foreach($accounts as $x): ?>
+      <div class="panel-head"><h2>Accounts</h2><span><?=count($displayAccounts)+1?> currencies</span></div>
+      <div class="asset-row">
+        <div class="asset-icon">U</div>
+        <div class="asset-copy"><strong>USD</strong><small>Estimated portfolio value</small></div>
+        <strong><?=number_format($availableBalance,0)?></strong>
+      </div>
+      <?php foreach($displayAccounts as $x): ?>
         <div class="asset-row">
           <div class="asset-icon"><?=e(substr($x['currency'],0,1))?></div>
           <div class="asset-copy"><strong><?=e($x['currency'])?></strong><small>Available balance</small></div>
@@ -201,7 +200,7 @@ $availableBalance=($btcPrice && $btcHolding>0)
     <?php if(!$tokens): ?><p class="muted empty">No crypto assets to display yet.</p><?php endif; ?>
   </section>
 </main>
-<script src="/assets/live-balance.js?v=20261011" defer></script>
+<script src="/assets/live-balance.js?v=20261012" defer></script>
 
 <?php if($showOnboarding): ?>
 <div class="onboarding-backdrop" id="security-onboarding" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
