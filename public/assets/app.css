@@ -89,3 +89,11 @@ a.deposit-asset:hover{background:#f7faff;border-color:var(--accent-blue);transfo
 #balance-price-status{font-size:11px;color:inherit}
 #balance-price-status.is-live{color:#267a35}
 #balance-price-status.is-live{color:#267a35}.live-price-dot.is-live{background:#26a269;box-shadow:0 0 0 3px rgba(38,162,105,.13)}
+
+
+/* Improve contrast after switching the balance card to a light background. */
+.balance-card{color:#111827}
+.balance-card small,.balance-card span{color:#626b78}
+.balance-card .balance-meta{border-top-color:#dce3ec}
+.balance-card #balance-price-status.is-live{color:#187747}
+.balance-card .live-price-dot.is-live{background:#16885d}
