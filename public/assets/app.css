@@ -97,3 +97,6 @@ a.deposit-asset:hover{background:#f7faff;border-color:var(--accent-blue);transfo
 .balance-card .balance-meta{border-top-color:#dce3ec}
 .balance-card #balance-price-status.is-live{color:#187747}
 .balance-card .live-price-dot.is-live{background:#16885d}
+
+/* Keep large live balances readable on narrow screens. */
+.balance-card #available-balance{display:block;max-width:100%;font-size:clamp(28px,7.2vw,64px);line-height:1.08;overflow-wrap:anywhere;word-break:normal}
