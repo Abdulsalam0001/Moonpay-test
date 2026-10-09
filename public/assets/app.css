@@ -82,3 +82,10 @@ a.deposit-asset:hover{background:#f7faff;border-color:var(--accent-blue);transfo
 .token-balance-value small{color:var(--muted);font-size:11px}
 .deposit-asset-copy small{display:flex;flex-wrap:wrap;gap:5px;align-items:center}
 @media(max-width:520px){.token-market-row{align-items:flex-start}.token-balance-value{padding-top:3px}.token-market-price{gap:5px}}
+
+/* Live BTC/USD portfolio valuation */
+#available-balance{font-variant-numeric:tabular-nums;transition:opacity .15s ease}
+.live-price-dot{display:inline-block;width:7px;height:7px;margin-right:4px;border-radius:50%;background:#a3a3a3;vertical-align:middle}
+#balance-price-status{font-size:11px;color:inherit}
+#balance-price-status.is-live{color:#267a35}
+#balance-price-status.is-live .live-price-dot{background:#26a269;box-shadow:0 0 0 3px rgba(38,162,105,.13)}
