@@ -65,6 +65,26 @@ if($btcPrice && $btcPrice['usd']>0){
     ]);
 }
 
+// Make the supported portfolio assets visible from the start without inventing holdings.
+$seedAsset=$pdo->prepare(
+    'INSERT INTO user_tokens(user_id,symbol,name,balance)
+     VALUES(:user_id,:symbol,:name,0)
+     ON CONFLICT(user_id,symbol) DO NOTHING'
+);
+foreach([
+    ['BTC','Bitcoin'],
+    ['ETH','Ethereum'],
+    ['USDT','Tether'],
+    ['SOL','Solana'],
+    ['XRP','XRP'],
+] as [$symbol,$name]){
+    $seedAsset->execute([
+        'user_id'=>$user['id'],
+        'symbol'=>$symbol,
+        'name'=>$name,
+    ]);
+}
+
 $btcStmt=$pdo->prepare("SELECT balance FROM user_tokens WHERE user_id=:id AND UPPER(symbol)='BTC' LIMIT 1");
 $btcStmt->execute(['id'=>$user['id']]);
 $btcHolding=(float)($btcStmt->fetchColumn() ?: 0);
