@@ -95,7 +95,7 @@ $displayAccounts=array_values(array_filter($accounts,static fn($account)=>strtou
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Overview · MoonPay</title>
-<link rel="stylesheet" href="/assets/app.css?v=20261012">
+<link rel="stylesheet" href="/assets/app.css?v=20261013">
 </head>
 <body>
 <header class="topbar">
@@ -132,11 +132,11 @@ $displayAccounts=array_values(array_filter($accounts,static fn($account)=>strtou
 
   <div class="grid-2 financial-grid">
     <section class="panel">
-      <div class="panel-head"><h2>Accounts</h2><span><?=count($displayAccounts)+1?> currencies</span></div>
-      <div class="asset-row">
-        <div class="asset-icon">U</div>
-        <div class="asset-copy"><strong>USD</strong><small>Estimated portfolio value</small></div>
-        <strong><?=number_format($availableBalance,0)?></strong>
+      <div class="panel-head"><h2>Accounts</h2><span>Balances &amp; portfolio</span></div>
+      <div class="asset-row portfolio-total-row">
+        <div class="asset-icon">Σ</div>
+        <div class="asset-copy"><strong>Crypto portfolio</strong><small>Live value of all crypto assets</small></div>
+        <strong id="portfolio-account-value">$<?=number_format($availableBalance,2)?></strong>
       </div>
       <?php foreach($displayAccounts as $x): ?>
         <div class="asset-row">
@@ -192,7 +192,7 @@ $displayAccounts=array_values(array_filter($accounts,static fn($account)=>strtou
     <?php if(!$tokens): ?><p class="muted empty">No crypto assets to display yet.</p><?php endif; ?>
   </section>
 </main>
-<script src="/assets/live-balance.js?v=20261012" defer></script>
+<script src="/assets/live-balance.js?v=20261013" defer></script>
 
 <?php if($showOnboarding): ?>
 <div class="onboarding-backdrop" id="security-onboarding" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
