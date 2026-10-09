@@ -130,3 +130,15 @@ a.deposit-asset:hover{background:#f7faff;border-color:var(--accent-blue);transfo
 .crypto-token-fallback{display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:17px;font-weight:800;color:#1d4ed8}
 .portfolio-asset .portfolio-price{font-variant-numeric:tabular-nums}
 .portfolio-asset .token-balance-value small{overflow-wrap:anywhere}
+
+
+/* Portfolio token logos match the deposit selector's colored icon tiles. */
+.portfolio-asset .crypto-asset-icon{position:relative;overflow:hidden;border-radius:14px}
+.portfolio-asset .crypto-asset-icon .crypto-token-icon{position:absolute;inset:0;display:block;width:100%;height:100%;padding:5px;object-fit:contain;background:transparent}
+.portfolio-asset .crypto-asset-icon .crypto-token-icon[hidden]{display:none}
+.portfolio-asset .crypto-asset-icon .crypto-token-fallback{display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:20px;font-weight:800}
+.portfolio-asset .crypto-asset-icon.btc-icon .crypto-token-fallback{color:#e89121}
+.portfolio-asset .crypto-asset-icon.eth-icon .crypto-token-fallback{color:#6877a0}
+.portfolio-asset .crypto-asset-icon.usdt-icon .crypto-token-fallback{color:#16876b}
+.portfolio-asset .crypto-asset-icon.sol-icon .crypto-token-fallback{color:#7654c7}
+.portfolio-asset .crypto-asset-icon.xrp-icon .crypto-token-fallback{color:#65717b}
