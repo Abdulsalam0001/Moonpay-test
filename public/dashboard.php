@@ -87,7 +87,7 @@ $availableBalance=($btcPrice && $btcHolding>0)
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Overview · MoonPay</title>
-<link rel="stylesheet" href="/assets/app.css">
+<link rel="stylesheet" href="/assets/app.css?v=20261009">
 </head>
 <body>
 <header class="topbar">
@@ -110,9 +110,9 @@ $availableBalance=($btcPrice && $btcHolding>0)
   </div>
 
   <section class="balance-card financial-balance">
-    <div><span>Bitcoin portfolio value</span><small class="balance-label">Available balance · BTC-backed</small></div>
-    <strong id="available-balance" data-btc-holding="<?=e(rtrim(rtrim(number_format($btcHolding,8,'.',''),'0'),'.'))?>" data-fallback-usd="<?=e((string)$total)?>">$<?=number_format($availableBalance,2)?></strong>
-    <div class="balance-meta"><span id="balance-btc-equivalent"><?=number_format($btcHolding,8)?> BTC</span><span><span class="live-price-dot" aria-hidden="true"></span> <span id="balance-price-status">Connecting to live price</span></span></div>
+    <div><span>Estimated portfolio value</span><small class="balance-label">BTC holding valued at market price</small></div>
+    <strong id="available-balance" data-btc-holding="<?=e(rtrim(rtrim(number_format($btcHolding,8,'.',''),'0'),'.'))?>" data-fallback-usd="<?=e((string)$total)?>">$<?=number_format($availableBalance,0)?></strong>
+    <div class="balance-meta"><span id="balance-btc-equivalent"><?=number_format($btcHolding,8)?> BTC</span><span id="balance-market-price"><?= $btcPrice ? '1 BTC = '.e(format_crypto_usd((float)$btcPrice['usd'])) : 'Market price refreshing' ?></span></div>
   </section>
 
   <section class="quick-actions">
@@ -147,28 +147,31 @@ $availableBalance=($btcPrice && $btcHolding>0)
     </section>
   </div>
 
-  <section class="panel" style="margin-top:22px">
-    <div class="panel-head"><h2>Tokens</h2><span><?=count($tokens)?> assets</span></div>
+  <section class="panel portfolio-assets-section" style="margin-top:22px">
+    <div class="panel-head"><div><p class="eyebrow">Your portfolio</p><h2>Crypto assets</h2></div><span><?=count($tokens)?> assets</span></div>
     <?php foreach($tokens as $token): ?>
-      <?php $marketPrice=crypto_price_for_symbol($marketPrices,(string)$token['symbol']); ?>
-      <div class="asset-row token-market-row">
+      <?php
+        $marketPrice=crypto_price_for_symbol($marketPrices,(string)$token['symbol']);
+        $tokenKey=strtolower(preg_replace('/[^a-z0-9]+/i','-',(string)$token['symbol']));
+        $tokenAmount=(float)$token['balance'];
+      ?>
+      <div class="portfolio-asset" data-asset-symbol="<?=e(strtoupper((string)$token['symbol']))?>" data-asset-amount="<?=e((string)$tokenAmount)?>">
         <div class="asset-icon"><?=e(substr($token['symbol'],0,1))?></div>
-        <div class="asset-copy"><strong><?=e($token['symbol'])?></strong><small><?=e($token['name'])?></small>
-          <?php if($marketPrice): ?>
-            <small class="token-market-price"><?=e(format_crypto_usd($marketPrice['usd']))?> per token
-              <?php if($marketPrice['change_24h']!==null): ?><span class="<?=$marketPrice['change_24h']>=0?'positive':'negative'?>"><?=($marketPrice['change_24h']>=0?'+':'')?><?=number_format($marketPrice['change_24h'],2)?>% 24h</span><?php endif; ?>
-            </small>
-          <?php else: ?><small class="token-market-price">Market price unavailable</small><?php endif; ?>
+        <div class="asset-copy">
+          <strong><?=e($token['name'])?> <span class="portfolio-symbol"><?=e(strtoupper((string)$token['symbol']))?></span></strong>
+          <small class="portfolio-price" id="asset-price-<?=$tokenKey?>"><?= $marketPrice ? e(format_crypto_usd((float)$marketPrice['usd'])).' per coin' : 'Price updating' ?></small>
+          <small class="portfolio-change" id="asset-change-<?=$tokenKey?>"><?php if($marketPrice && $marketPrice['change_24h']!==null): ?><span class="<?=$marketPrice['change_24h']>=0?'positive':'negative'?>"><?=($marketPrice['change_24h']>=0?'+':'')?><?=number_format($marketPrice['change_24h'],2)?>% today</span><?php else: ?>24-hour change not available<?php endif; ?></small>
         </div>
-        <div class="token-balance-value"><strong><?=rtrim(rtrim(number_format((float)$token['balance'],8,'.',''),'0'),'.')?></strong>
-          <?php if($marketPrice): ?><small>≈ <?=e(format_crypto_usd((float)$token['balance']*$marketPrice['usd']))?> USD</small><?php endif; ?>
+        <div class="token-balance-value">
+          <strong id="asset-amount-<?=$tokenKey?>"><?=rtrim(rtrim(number_format($tokenAmount,8,'.',''),'0'),'.')?></strong>
+          <small id="asset-value-<?=$tokenKey?>"><?= $marketPrice ? '≈ '.e(format_crypto_usd($tokenAmount*(float)$marketPrice['usd'])).' USD' : 'Value updating' ?></small>
         </div>
       </div>
     <?php endforeach; ?>
-    <?php if(!$tokens): ?><p class="muted empty">No token balances yet.</p><?php endif; ?>
+    <?php if(!$tokens): ?><p class="muted empty">No crypto assets to display yet.</p><?php endif; ?>
   </section>
 </main>
-<script src="/assets/live-balance.js" defer></script>
+<script src="/assets/live-balance.js?v=20261009" defer></script>
 
 <?php if($showOnboarding): ?>
 <div class="onboarding-backdrop" id="security-onboarding" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
