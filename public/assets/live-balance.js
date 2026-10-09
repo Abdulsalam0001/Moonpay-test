@@ -76,6 +76,8 @@
     // The USD figure is the combined value of all priced token holdings; the
     // legacy editable USD account is deliberately not used in this calculation.
     balance.textContent = money(portfolioTotal);
+    const accountPortfolioValue = document.getElementById('portfolio-account-value');
+    if (accountPortfolioValue) accountPortfolioValue.textContent = money(portfolioTotal);
     if (btcEquivalent && hasBtcPrice) {
       btcEquivalent.textContent = (portfolioTotal / currentBtcPrice).toLocaleString('en-US', {
         minimumFractionDigits: 0, maximumFractionDigits: 8
