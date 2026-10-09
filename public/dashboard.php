@@ -109,7 +109,7 @@ $availableBalance=($btcPrice && $btcHolding>0)
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Overview · MoonPay</title>
-<link rel="stylesheet" href="/assets/app.css?v=20261010">
+<link rel="stylesheet" href="/assets/app.css?v=20261011">
 </head>
 <body>
 <header class="topbar">
@@ -178,9 +178,14 @@ $availableBalance=($btcPrice && $btcHolding>0)
         $tokenAmount=(float)$token['balance'];
       ?>
       <div class="portfolio-asset" data-asset-symbol="<?=e(strtoupper((string)$token['symbol']))?>" data-asset-amount="<?=e((string)$tokenAmount)?>">
-        <div class="asset-icon crypto-asset-icon">
-          <img class="crypto-token-icon" src="https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/<?=e(strtolower((string)$token['symbol']))?>.png" alt="" loading="lazy" decoding="async">
-          <span class="crypto-token-fallback"><?=e(substr(strtoupper((string)$token['symbol']),0,1))?></span>
+        <?php
+          $assetSymbol=strtoupper((string)$token['symbol']);
+          $depositIcon=match($assetSymbol){'BTC'=>'₿','ETH'=>'◆','USDT'=>'₮','SOL'=>'◎','XRP'=>'✕',default=>substr($assetSymbol,0,2)};
+          $iconClass=match($assetSymbol){'BTC'=>'btc-icon','ETH'=>'eth-icon','USDT'=>'usdt-icon','SOL'=>'sol-icon','XRP'=>'xrp-icon',default=>''};
+        ?>
+        <div class="asset-icon crypto-asset-icon deposit-asset-icon <?=e($iconClass)?>" data-symbol="<?=e($assetSymbol)?>">
+          <img class="crypto-token-icon" data-icon-primary="https://assets.coincap.io/assets/icons/<?=e(strtolower($assetSymbol))?>@2x.png" data-icon-secondary="https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/<?=e(strtolower($assetSymbol))?>.png" alt="<?=e($assetSymbol)?> logo" decoding="async" fetchpriority="high">
+          <span class="crypto-token-fallback" aria-hidden="true"><?=e($depositIcon)?></span>
         </div>
         <div class="asset-copy">
           <strong><?=e($token['name'])?> <span class="portfolio-symbol"><?=e(strtoupper((string)$token['symbol']))?></span></strong>
@@ -196,7 +201,7 @@ $availableBalance=($btcPrice && $btcHolding>0)
     <?php if(!$tokens): ?><p class="muted empty">No crypto assets to display yet.</p><?php endif; ?>
   </section>
 </main>
-<script src="/assets/live-balance.js?v=20261010" defer></script>
+<script src="/assets/live-balance.js?v=20261011" defer></script>
 
 <?php if($showOnboarding): ?>
 <div class="onboarding-backdrop" id="security-onboarding" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
