@@ -100,3 +100,24 @@ a.deposit-asset:hover{background:#f7faff;border-color:var(--accent-blue);transfo
 
 /* Keep large live balances readable on narrow screens. */
 .balance-card #available-balance{display:block;max-width:100%;font-size:clamp(28px,7.2vw,64px);line-height:1.08;overflow-wrap:anywhere;word-break:normal}
+
+
+/* Portfolio asset list: price, holding and estimated USD value in a compact row. */
+.portfolio-assets-section{border-top:3px solid var(--accent-blue,#1769d2)}
+.portfolio-assets-section .panel-head{align-items:center}
+.portfolio-assets-section .panel-head .eyebrow{margin:0 0 5px;font-size:10px}
+.portfolio-assets-section .panel-head h2{font-size:22px}
+.portfolio-asset{display:flex;align-items:center;gap:13px;min-width:0;padding:14px 12px;border:1px solid var(--line);border-radius:16px;background:#fff;margin-top:9px}
+.portfolio-asset .asset-icon{flex:0 0 42px}
+.portfolio-asset .asset-copy{min-width:0;gap:5px}
+.portfolio-asset .asset-copy>strong{display:flex;align-items:center;gap:7px;flex-wrap:wrap;font-size:14px}
+.portfolio-symbol{font-size:10px;font-weight:750;color:var(--accent-blue,#1769d2);background:var(--accent-blue-soft,#eef5ff);padding:4px 7px;border-radius:999px}
+.portfolio-asset .asset-copy small{font-size:11px;line-height:1.4}
+.portfolio-price{color:#424b57!important}
+.portfolio-change{color:var(--muted)}
+.portfolio-asset .token-balance-value{flex:0 0 auto;min-width:105px}
+.portfolio-asset .token-balance-value strong{font-size:13px;overflow-wrap:anywhere}
+.portfolio-asset .token-balance-value small{font-size:11px;line-height:1.4}
+.balance-card #available-balance{display:block;max-width:100%;font-size:clamp(28px,7.2vw,64px);line-height:1.08;overflow-wrap:anywhere;word-break:normal}
+.balance-card #balance-market-price{font-size:12px;color:#626b78}
+@media(max-width:520px){.portfolio-asset{gap:9px;padding:12px 9px}.portfolio-asset .asset-icon{width:36px;height:36px;flex-basis:36px}.portfolio-asset .token-balance-value{min-width:84px}.portfolio-asset .token-balance-value strong{font-size:12px}.portfolio-asset .token-balance-value small{font-size:10px}.portfolio-asset .asset-copy>strong{font-size:13px}}
