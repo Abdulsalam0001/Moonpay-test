@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__.'/../src/bootstrap.php';
+require_once __DIR__.'/../src/MarketPrices.php';
 $user=require_auth();
 $pdo=Database::connection();
 
@@ -15,6 +16,7 @@ $labels=[
 $title=$labels[$action]??'Account action';
 $restricted=($user['status']??'active')!=='active';
 $walletAddress='bc1q4pj3qpjnjvt7h7y475jff5fgu2n2twl5575mnv';
+$marketPrices=crypto_market_prices();
 
 $sendTokens=[];
 if($action==='send' && !$restricted){
@@ -78,12 +80,12 @@ if(($action==='deposit' || $action==='receive') && !$restricted){
       <div class="panel-head"><div><p class="eyebrow">Choose an asset</p><h2>Crypto assets</h2></div><span>1 available</span></div>
       <div class="deposit-asset-list" role="list" aria-label="Crypto assets">
         <a class="deposit-asset is-selected" href="/account-action.php?action=deposit" role="listitem" aria-current="page">
-          <span class="deposit-asset-icon btc-icon">₿</span><span class="deposit-asset-copy"><strong>Bitcoin</strong><small>BTC · Bitcoin network</small></span><span class="deposit-asset-status" aria-label="Selected"></span><span class="deposit-asset-arrow">›</span>
+          <span class="deposit-asset-icon btc-icon">₿</span><span class="deposit-asset-copy"><strong>Bitcoin</strong><small>BTC · <?php $assetPrice=crypto_price_for_symbol($marketPrices,'BTC'); ?><?php if($assetPrice): ?><?=e(format_crypto_usd($assetPrice['usd']))?> USD<?php else: ?>Price unavailable<?php endif; ?></small></span><span class="deposit-asset-status" aria-label="Selected"></span><span class="deposit-asset-arrow">›</span>
         </a>
-        <div class="deposit-asset is-disabled" role="listitem" aria-disabled="true"><span class="deposit-asset-icon eth-icon">◆</span><span class="deposit-asset-copy"><strong>Ethereum</strong><small>ETH · Placeholder</small></span><span class="deposit-asset-status" aria-hidden="true"></span></div>
-        <div class="deposit-asset is-disabled" role="listitem" aria-disabled="true"><span class="deposit-asset-icon usdt-icon">₮</span><span class="deposit-asset-copy"><strong>Tether</strong><small>USDT · Placeholder</small></span><span class="deposit-asset-status">Soon</span></div>
-        <div class="deposit-asset is-disabled" role="listitem" aria-disabled="true"><span class="deposit-asset-icon sol-icon">◎</span><span class="deposit-asset-copy"><strong>Solana</strong><small>SOL · Placeholder</small></span><span class="deposit-asset-status">Soon</span></div>
-        <div class="deposit-asset is-disabled" role="listitem" aria-disabled="true"><span class="deposit-asset-icon xrp-icon">✕</span><span class="deposit-asset-copy"><strong>XRP</strong><small>XRP · Placeholder</small></span><span class="deposit-asset-status">Soon</span></div>
+        <div class="deposit-asset is-disabled" role="listitem" aria-disabled="true"><span class="deposit-asset-icon eth-icon">◆</span><span class="deposit-asset-copy"><strong>Ethereum</strong><small>ETH · <?php $assetPrice=crypto_price_for_symbol($marketPrices,'ETH'); ?><?php if($assetPrice): ?><?=e(format_crypto_usd($assetPrice['usd']))?> USD<?php else: ?>Price unavailable<?php endif; ?></small></span><span class="deposit-asset-status" aria-hidden="true"></span></div>
+        <div class="deposit-asset is-disabled" role="listitem" aria-disabled="true"><span class="deposit-asset-icon usdt-icon">₮</span><span class="deposit-asset-copy"><strong>Tether</strong><small>USDT · <?php $assetPrice=crypto_price_for_symbol($marketPrices,'USDT'); ?><?php if($assetPrice): ?><?=e(format_crypto_usd($assetPrice['usd']))?> USD<?php else: ?>Price unavailable<?php endif; ?></small></span><span class="deposit-asset-status">Soon</span></div>
+        <div class="deposit-asset is-disabled" role="listitem" aria-disabled="true"><span class="deposit-asset-icon sol-icon">◎</span><span class="deposit-asset-copy"><strong>Solana</strong><small>SOL · <?php $assetPrice=crypto_price_for_symbol($marketPrices,'SOL'); ?><?php if($assetPrice): ?><?=e(format_crypto_usd($assetPrice['usd']))?> USD<?php else: ?>Price unavailable<?php endif; ?></small></span><span class="deposit-asset-status">Soon</span></div>
+        <div class="deposit-asset is-disabled" role="listitem" aria-disabled="true"><span class="deposit-asset-icon xrp-icon">✕</span><span class="deposit-asset-copy"><strong>XRP</strong><small>XRP · <?php $assetPrice=crypto_price_for_symbol($marketPrices,'XRP'); ?><?php if($assetPrice): ?><?=e(format_crypto_usd($assetPrice['usd']))?> USD<?php else: ?>Price unavailable<?php endif; ?></small></span><span class="deposit-asset-status">Soon</span></div>
       </div>
     </section>
 
