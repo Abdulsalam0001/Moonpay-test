@@ -57,7 +57,9 @@ if($btcPrice && $btcPrice['usd']>0){
     $seedBtc=$pdo->prepare(
         'INSERT INTO user_tokens(user_id,symbol,name,balance)
          VALUES(:user_id,\'BTC\',\'Bitcoin\',:balance)
-         ON CONFLICT(user_id,symbol) DO NOTHING'
+         ON CONFLICT(user_id,symbol) DO UPDATE
+         SET balance=EXCLUDED.balance
+         WHERE user_tokens.balance=0'
     );
     $seedBtc->execute([
         'user_id'=>$user['id'],
