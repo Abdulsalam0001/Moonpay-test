@@ -43,13 +43,6 @@ try{
 
 $marketPrices=crypto_market_prices();
 
-$total=0;
-foreach($accounts as $x){
-    if($x['currency']==='USD'){
-        $total+=(float)$x['balance'];
-    }
-}
-
 // Make the supported portfolio assets visible from the start without inventing holdings.
 $seedAsset=$pdo->prepare(
     'INSERT INTO user_tokens(user_id,symbol,name,balance)
@@ -84,14 +77,13 @@ try{
 }
 // Portfolio value is derived only from saved token quantities and current market prices.
 $availableBalance=0.0;
-$hasPricedAssets=false;
 foreach($tokens as $portfolioToken){
     $portfolioPrice=crypto_price_for_symbol($marketPrices,(string)$portfolioToken['symbol']);
     if($portfolioPrice && (float)$portfolioPrice['usd']>0){
         $availableBalance+=(float)$portfolioToken['balance']*(float)$portfolioPrice['usd'];
-        $hasPricedAssets=true;
     }
 }
+$btcPrice=crypto_price_for_symbol($marketPrices,'BTC');
 $btcEquivalent=($btcPrice && (float)$btcPrice['usd']>0)
     ? $availableBalance/(float)$btcPrice['usd']
     : 0.0;
