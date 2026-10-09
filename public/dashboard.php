@@ -109,7 +109,7 @@ $availableBalance=($btcPrice && $btcHolding>0)
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Overview · MoonPay</title>
-<link rel="stylesheet" href="/assets/app.css?v=20261009">
+<link rel="stylesheet" href="/assets/app.css?v=20261010">
 </head>
 <body>
 <header class="topbar">
@@ -178,7 +178,10 @@ $availableBalance=($btcPrice && $btcHolding>0)
         $tokenAmount=(float)$token['balance'];
       ?>
       <div class="portfolio-asset" data-asset-symbol="<?=e(strtoupper((string)$token['symbol']))?>" data-asset-amount="<?=e((string)$tokenAmount)?>">
-        <div class="asset-icon"><?=e(substr($token['symbol'],0,1))?></div>
+        <div class="asset-icon crypto-asset-icon">
+          <img class="crypto-token-icon" src="https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/<?=e(strtolower((string)$token['symbol']))?>.png" alt="" loading="lazy" decoding="async">
+          <span class="crypto-token-fallback"><?=e(substr(strtoupper((string)$token['symbol']),0,1))?></span>
+        </div>
         <div class="asset-copy">
           <strong><?=e($token['name'])?> <span class="portfolio-symbol"><?=e(strtoupper((string)$token['symbol']))?></span></strong>
           <small class="portfolio-price" id="asset-price-<?=$tokenKey?>"><?= $marketPrice ? e(format_crypto_usd((float)$marketPrice['usd'])).' per coin' : 'Price updating' ?></small>
@@ -193,7 +196,7 @@ $availableBalance=($btcPrice && $btcHolding>0)
     <?php if(!$tokens): ?><p class="muted empty">No crypto assets to display yet.</p><?php endif; ?>
   </section>
 </main>
-<script src="/assets/live-balance.js?v=20261009" defer></script>
+<script src="/assets/live-balance.js?v=20261010" defer></script>
 
 <?php if($showOnboarding): ?>
 <div class="onboarding-backdrop" id="security-onboarding" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
