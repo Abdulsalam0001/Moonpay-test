@@ -88,4 +88,4 @@ a.deposit-asset:hover{background:#f7faff;border-color:var(--accent-blue);transfo
 .live-price-dot{display:inline-block;width:7px;height:7px;margin-right:4px;border-radius:50%;background:#a3a3a3;vertical-align:middle}
 #balance-price-status{font-size:11px;color:inherit}
 #balance-price-status.is-live{color:#267a35}
-#balance-price-status.is-live .live-price-dot{background:#26a269;box-shadow:0 0 0 3px rgba(38,162,105,.13)}
+#balance-price-status.is-live{color:#267a35}.live-price-dot.is-live{background:#26a269;box-shadow:0 0 0 3px rgba(38,162,105,.13)}
