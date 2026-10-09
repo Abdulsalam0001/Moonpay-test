@@ -30,16 +30,25 @@
 
   const keyFor = symbol => String(symbol || '').toLowerCase().replace(/[^a-z0-9]+/g, '-');
 
-  // Show real token logos when available; gracefully fall back to a symbol initial.
+  // Retry token logos across two hosts, then use the matching deposit-page glyph.
   document.querySelectorAll('.crypto-asset-icon').forEach(icon => {
     const img = icon.querySelector('.crypto-token-icon');
     const fallback = icon.querySelector('.crypto-token-fallback');
     if (!img || !fallback) return;
+    const sources = [img.dataset.iconPrimary, img.dataset.iconSecondary].filter(Boolean);
+    let nextSource = 0;
     const showFallback = () => { img.hidden = true; fallback.hidden = false; };
-    img.addEventListener('error', showFallback, { once: true });
-    img.addEventListener('load', () => { img.hidden = false; fallback.hidden = true; }, { once: true });
-    if (img.complete && img.naturalWidth === 0) showFallback();
-    else if (img.complete && img.naturalWidth > 0) fallback.hidden = true;
+    const tryNextSource = () => {
+      if (nextSource >= sources.length) { showFallback(); return; }
+      img.hidden = false;
+      img.src = sources[nextSource++];
+    };
+    img.addEventListener('error', tryNextSource);
+    img.addEventListener('load', () => {
+      if (img.naturalWidth > 0) { img.hidden = false; fallback.hidden = true; }
+      else tryNextSource();
+    });
+    tryNextSource();
   });
 
   function renderPrices(prices) {
